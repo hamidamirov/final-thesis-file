@@ -1,13 +1,15 @@
+{% load ui %}
 <!doctype html>
-<html lang="en">
+<html lang="{{ site_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Student Finance</title>
 </head>
-<body>
+<body data-theme="{{ site_theme }}">
   <main>
-    <h1>Student Finance Management</h1>
+    {% include "includes/preferences.html" %}
+    <h1>{% tr "Student Finance" %}</h1>
     <p>The initial project web page is ready. Student accounts and finance features will be added in later stages.</p>
     <p><a href="/health/database/">Check database connection status</a></p>
   </main>

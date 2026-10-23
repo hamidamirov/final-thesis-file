@@ -1,14 +1,15 @@
+{% load ui %}
 <!doctype html>
-<html lang="en">
+<html lang="{{ site_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Student Finance Dashboard</title>
+  <title>{% tr "Student Finance Dashboard" %}</title>
   <style>
     :root { color-scheme: light; font-family: Arial, sans-serif; color: #172033; background: #f3f6fb; }
     * { box-sizing: border-box; }
     body { margin: 0; }
-    header { background: #173b67; color: white; padding: 18px max(24px, calc((100% - 1100px) / 2)); display: flex; align-items: center; justify-content: space-between; }
+    header { background: #173b67; color: white; padding: 18px max(24px, calc((100% - 1100px) / 2)); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
     header h1 { font-size: 20px; margin: 0; }
     header form { margin: 0; }
     button { border: 0; border-radius: 7px; padding: 11px 16px; background: #1675d1; color: white; font-weight: 700; cursor: pointer; }
@@ -69,78 +70,92 @@
     .offer-code { display: inline-block; margin-top: 8px; padding: 6px 9px; background: #f1f5fa; border-radius: 6px; font-family: monospace; }
     .offer-filter { display: flex; align-items: end; gap: 10px; max-width: 420px; margin-bottom: 18px; }
     .offer-filter label { flex: 1; margin: 0; }
+    .preferences { display: flex; align-items: end; gap: 8px; margin: 0; }
+    .preferences label { margin: 0; font-size: 12px; }
+    .preferences select { width: auto; min-width: 120px; padding: 8px; }
+    .preferences button { padding: 9px 12px; }
     @media (max-width: 760px) { .cards, .content, .report-charts, .report-summary { grid-template-columns: 1fr; } main { margin-top: 20px; } .month-filter, .transaction-filter { align-items: stretch; flex-direction: column; } }
+    body[data-theme="dark"] { color: #e7edf5; background: #111827; }
+    body[data-theme="dark"] .card, body[data-theme="dark"] .panel { background: #1c2736; border-color: #344357; box-shadow: none; }
+    body[data-theme="dark"] input, body[data-theme="dark"] select { color: #e7edf5; background: #111827; border-color: #52647a; }
+    body[data-theme="dark"] th, body[data-theme="dark"] td { border-color: #344357; }
+    body[data-theme="dark"] .report-stat, body[data-theme="dark"] .tip-item, body[data-theme="dark"] .offer-code { background: #253347; }
+    body[data-theme="dark"] .goal-item, body[data-theme="dark"] .challenge-item, body[data-theme="dark"] .offer-item { border-color: #344357; }
+    body[data-theme="dark"] .card span, body[data-theme="dark"] .empty, body[data-theme="dark"] .tip-category, body[data-theme="dark"] .offer-provider, body[data-theme="dark"] .challenge-duration { color: #a9bacf; }
+    body[data-theme="dark"] a { color: #8fc1ff; }
+    @media (max-width: 760px) { .preferences { flex-wrap: wrap; } }
   </style>
 </head>
-<body>
+<body data-theme="{{ site_theme }}">
   <header>
-    <h1>Student Finance</h1>
-    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+    <h1>{% tr "Student Finance" %}</h1>
+    {% include "includes/preferences.html" %}
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% tr "Log out" %}</button></form>
   </header>
   <main>
-    <div class="welcome"><h2>Welcome, {{ request.user.username }}</h2><p>Track your income and expenses in one place.</p></div>
+    <div class="welcome"><h2>{% tr "Welcome" %}, {{ request.user.username }}</h2><p>{% tr "Track your income and expenses in one place." %}</p></div>
     {% if messages %}<ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
     <section class="cards">
-      <div class="card"><span>Total income</span><strong>{{ income_total|floatformat:2 }}</strong></div>
-      <div class="card"><span>Total expenses</span><strong>{{ expense_total|floatformat:2 }}</strong></div>
-      <div class="card"><span>Balance</span><strong>{{ balance|floatformat:2 }}</strong></div>
+      <div class="card"><span>{% tr "Total income" %}</span><strong>{{ income_total|floatformat:2 }}</strong></div>
+      <div class="card"><span>{% tr "Total expenses" %}</span><strong>{{ expense_total|floatformat:2 }}</strong></div>
+      <div class="card"><span>{% tr "Balance" %}</span><strong>{{ balance|floatformat:2 }}</strong></div>
     </section>
     <section class="content">
       <div class="panel">
-        <h2>Add a transaction</h2>
+        <h2>{% tr "Add a transaction" %}</h2>
         <form method="post">
           {% csrf_token %}
           <input type="hidden" name="form_type" value="transaction">
           {{ form.non_field_errors }}
-          {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
-          <p><button type="submit">Save transaction</button></p>
+          {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}{% endfor %}
+          <p><button type="submit">{% tr "Save transaction" %}</button></p>
         </form>
       </div>
       <div class="panel">
-        <h2>Recent transactions</h2>
+        <h2>{% tr "Recent transactions" %}</h2>
         <form method="get" class="transaction-filter">
           <input type="hidden" name="month" value="{{ report_month|date:'Y-m' }}">
-          <input type="search" name="q" value="{{ search_query }}" placeholder="Search category or note">
-          <input type="month" name="transaction_month" value="{{ selected_transaction_month }}" aria-label="Filter by month">
-          <select name="type" aria-label="Filter by transaction type">
-            <option value="">All types</option>
-            {% for value, label in transaction_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          <input type="search" name="q" value="{{ search_query }}" placeholder="{% tr 'Search category or note' %}">
+          <input type="month" name="transaction_month" value="{{ selected_transaction_month }}" aria-label="{% tr 'Filter by month' %}">
+          <select name="type" aria-label="{% tr 'Filter by transaction type' %}">
+            <option value="">{% tr "All types" %}</option>
+            {% for value, label in transaction_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label|translate:site_language }}</option>{% endfor %}
           </select>
-          <button type="submit">Filter</button>
-          <a href="{% url 'home' %}">Clear</a>
+          <button type="submit">{% tr "Filter" %}</button>
+          <a href="{% url 'home' %}">{% tr "Clear" %}</a>
         </form>
         {% if transactions %}
-          <table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>Actions</th></tr></thead>
+          <table><thead><tr><th>{% tr "Date" %}</th><th>{% tr "Type" %}</th><th>{% tr "Category" %}</th><th>{% tr "Amount" %}</th><th>{% tr "Note" %}</th><th>{% tr "Actions" %}</th></tr></thead>
           <tbody>{% for transaction in transactions %}<tr>
             <td>{{ transaction.date|date:"M j, Y" }}</td>
-            <td class="{{ transaction.type }}">{{ transaction.get_type_display }}</td>
+            <td class="{{ transaction.type }}">{{ transaction.get_type_display|translate:site_language }}</td>
             <td>{{ transaction.category }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
-            <td><a href="{% url 'transaction_edit' transaction.pk %}">Edit</a> · <a href="{% url 'transaction_delete' transaction.pk %}">Delete</a></td>
+            <td><a href="{% url 'transaction_edit' transaction.pk %}">{% tr "Edit" %}</a> · <a href="{% url 'transaction_delete' transaction.pk %}">{% tr "Delete" %}</a></td>
           </tr>{% endfor %}</tbody></table>
         {% else %}
-          {% if search_query or selected_type or selected_transaction_month %}<p class="empty">No transactions match these filters. <a href="{% url 'home' %}">Clear filters</a></p>
-          {% else %}<p class="empty">No transactions yet. Add your first one using the form.</p>{% endif %}
+          {% if search_query or selected_type or selected_transaction_month %}<p class="empty">{% tr "No transactions match these filters." %} <a href="{% url 'home' %}">{% tr "Clear filters" %}</a></p>
+          {% else %}<p class="empty">{% tr "No transactions yet. Add your first one using the form." %}</p>{% endif %}
         {% endif %}
       </div>
     </section>
     <section class="panel" style="margin-top: 20px">
-      <h2>Saving challenges</h2>
+      <h2>{% tr "Saving challenges" %}</h2>
       {% if saving_challenges %}
         <div class="challenge-list">
           {% for challenge in saving_challenges %}
             <article class="challenge-item">
               <h3>{{ challenge.title }}</h3>
-              <p class="challenge-duration">{{ challenge.duration_days }} days</p>
+              <p class="challenge-duration">{{ challenge.duration_days }} {% tr "days" %}</p>
               <p>{{ challenge.description|linebreaksbr }}</p>
               {% if challenge.user_entry %}
                 {% if challenge.user_entry.completed_at %}
-                  <strong class="income">Completed</strong>
+                  <strong class="income">{% tr "Completed" %}</strong>
                 {% else %}
                   <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="challenge_action" value="complete">
                     <input type="hidden" name="enrollment_id" value="{{ challenge.user_entry.pk }}">
-                    <button type="submit">Mark completed</button>
+                    <button type="submit">{% tr "Mark completed" %}</button>
                   </form>
                 {% endif %}
               {% else %}
@@ -148,26 +163,26 @@
                   {% csrf_token %}
                   <input type="hidden" name="challenge_action" value="start">
                   <input type="hidden" name="challenge_id" value="{{ challenge.pk }}">
-                  <button type="submit">Start challenge</button>
+                  <button type="submit">{% tr "Start challenge" %}</button>
                 </form>
               {% endif %}
             </article>
           {% endfor %}
         </div>
-      {% else %}<p class="empty">No saving challenges are available right now.</p>{% endif %}
+      {% else %}<p class="empty">{% tr "No saving challenges are available right now." %}</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
-      <h2>Student discount offers</h2>
+      <h2>{% tr "Student discount offers" %}</h2>
       {% if offer_categories %}
         <form method="get" class="offer-filter">
-          <label for="offer-category">Filter by category
+          <label for="offer-category">{% tr "Filter by category" %}
             <select id="offer-category" name="offer_category">
-              <option value="">All categories</option>
+              <option value="">{% tr "All categories" %}</option>
               {% for category in offer_categories %}<option value="{{ category }}" {% if selected_offer_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}
             </select>
           </label>
-          <button type="submit">Filter</button>
-          {% if selected_offer_category %}<a href="{% url 'home' %}">Clear</a>{% endif %}
+          <button type="submit">{% tr "Filter" %}</button>
+          {% if selected_offer_category %}<a href="{% url 'home' %}">{% tr "Clear" %}</a>{% endif %}
         </form>
         <div class="offer-list">
           {% for offer in student_offers %}
@@ -175,18 +190,18 @@
               <div class="offer-provider">{{ offer.provider }} · {{ offer.category }}</div>
               <h3>{{ offer.title }}</h3>
               <p>{{ offer.description|linebreaksbr }}</p>
-              {% if offer.discount_code %}<div>Discount code: <span class="offer-code">{{ offer.discount_code }}</span></div>{% endif %}
-              {% if offer.valid_until %}<p class="offer-provider">Valid until {{ offer.valid_until|date:"M j, Y" }}</p>{% endif %}
-              {% if offer.offer_url %}<p><a href="{{ offer.offer_url }}" target="_blank" rel="noopener noreferrer">View offer</a></p>{% endif %}
+              {% if offer.discount_code %}<div>{% tr "Discount code:" %} <span class="offer-code">{{ offer.discount_code }}</span></div>{% endif %}
+              {% if offer.valid_until %}<p class="offer-provider">{% tr "Valid until" %} {{ offer.valid_until|date:"M j, Y" }}</p>{% endif %}
+              {% if offer.offer_url %}<p><a href="{{ offer.offer_url }}" target="_blank" rel="noopener noreferrer">{% tr "View offer" %}</a></p>{% endif %}
             </article>
           {% endfor %}
         </div>
       {% else %}
-        <p class="empty">No student offers are available right now. An administrator can add offers in the admin panel.</p>
+        <p class="empty">{% tr "No student offers are available right now. An administrator can add offers in the admin panel." %}</p>
       {% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
-      <h2>Financial tips</h2>
+      <h2>{% tr "Financial tips" %}</h2>
       {% if financial_tips %}
         <div class="tip-list">
           {% for tip in financial_tips %}
@@ -197,78 +212,78 @@
             </article>
           {% endfor %}
         </div>
-      {% else %}<p class="empty">No financial tips are available right now.</p>{% endif %}
+      {% else %}<p class="empty">{% tr "No financial tips are available right now." %}</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
-      <h2>Savings goals</h2>
+      <h2>{% tr "Savings goals" %}</h2>
       <form method="post" style="max-width: 340px; margin-bottom: 24px">
         {% csrf_token %}
         <input type="hidden" name="form_type" value="savings_goal">
-        {% for field in goal_form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
-        <p><button type="submit">Create savings goal</button></p>
+        {% for field in goal_form %}<label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}{% endfor %}
+        <p><button type="submit">{% tr "Create savings goal" %}</button></p>
       </form>
       {% if savings_goals %}
         <div class="goal-list">
           {% for goal in savings_goals %}
             <article class="goal-item">
               <div class="goal-heading"><h3>{{ goal.name }}</h3><strong>{{ goal.progress_percent }}%</strong></div>
-              <div class="goal-track" role="progressbar" aria-label="{{ goal.name }} progress" aria-valuenow="{{ goal.progress_percent }}" aria-valuemin="0" aria-valuemax="100"><div class="goal-fill" style="width: {{ goal.progress_percent }}%"></div></div>
-              <p>{{ goal.saved_amount|floatformat:2 }} saved of {{ goal.target_amount|floatformat:2 }} · {{ goal.remaining_amount|floatformat:2 }} remaining</p>
-              {% if goal.target_date %}<p>Target date: {{ goal.target_date|date:"M j, Y" }}</p>{% endif %}
+              <div class="goal-track" role="progressbar" aria-label="{{ goal.name }} {% tr 'progress' %}" aria-valuenow="{{ goal.progress_percent }}" aria-valuemin="0" aria-valuemax="100"><div class="goal-fill" style="width: {{ goal.progress_percent }}%"></div></div>
+              <p>{{ goal.saved_amount|floatformat:2 }} {% tr "saved of" %} {{ goal.target_amount|floatformat:2 }} · {{ goal.remaining_amount|floatformat:2 }} {% tr "remaining" %}</p>
+              {% if goal.target_date %}<p>{% tr "Target date:" %} {{ goal.target_date|date:"M j, Y" }}</p>{% endif %}
               <form method="post" class="goal-contribution">
                 {% csrf_token %}
                 <input type="hidden" name="form_type" value="goal_contribution">
                 <input type="hidden" name="goal_id" value="{{ goal.pk }}">
-                <label>Add savings {{ contribution_form.amount }}{{ contribution_form.amount.errors }}</label>
-                <button type="submit">Add</button>
+                <label>{% tr "Add savings" %} {{ contribution_form.amount }}{{ contribution_form.amount.errors }}</label>
+                <button type="submit">{% tr "Add" %}</button>
               </form>
             </article>
           {% endfor %}
         </div>
-      {% else %}<p class="empty">No savings goals yet. Create one to track your progress.</p>{% endif %}
+      {% else %}<p class="empty">{% tr "No savings goals yet. Create one to track your progress." %}</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
-      <h2>Monthly budgets — {{ current_month|date:"F Y" }}</h2>
+      <h2>{% tr "Monthly budgets" %} — {{ current_month|date:"F Y" }}</h2>
       <form method="post" style="max-width: 340px; margin-bottom: 20px">
         {% csrf_token %}
         <input type="hidden" name="form_type" value="budget">
-        {% for field in budget_form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
-        <p><button type="submit">Save monthly budget</button></p>
+        {% for field in budget_form %}<label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}{% endfor %}
+        <p><button type="submit">{% tr "Save monthly budget" %}</button></p>
       </form>
       {% if budgets %}
-        <table><thead><tr><th>Category</th><th>Budget</th><th>Spent</th><th>Remaining</th></tr></thead>
+        <table><thead><tr><th>{% tr "Category" %}</th><th>{% tr "Budget" %}</th><th>{% tr "Spent" %}</th><th>{% tr "Remaining" %}</th></tr></thead>
         <tbody>{% for budget in budgets %}<tr>
           <td>{{ budget.category }}</td><td>{{ budget.amount|floatformat:2 }}</td>
           <td>{{ budget.spent|floatformat:2 }}</td><td>{{ budget.remaining|floatformat:2 }}</td>
         </tr>{% endfor %}</tbody></table>
-      {% else %}<p class="empty">No budgets set for this month yet.</p>{% endif %}
+      {% else %}<p class="empty">{% tr "No budgets set for this month yet." %}</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
-      <h2>Monthly report — {{ report_month|date:"F Y" }}</h2>
+      <h2>{% tr "Monthly report" %} — {{ report_month|date:"F Y" }}</h2>
       <form method="get" class="month-filter">
-        <label for="report-month">Select month
+        <label for="report-month">{% tr "Select month" %}
           <input id="report-month" type="month" name="month" value="{{ report_month|date:'Y-m' }}">
         </label>
-        <button type="submit">View report</button>
+        <button type="submit">{% tr "View report" %}</button>
       </form>
-      <p><a class="button-link" href="{% url 'monthly_report_csv' %}?month={{ report_month|date:'Y-m' }}">Download CSV</a></p>
+      <p><a class="button-link" href="{% url 'monthly_report_csv' %}?month={{ report_month|date:'Y-m' }}">{% tr "Download CSV" %}</a></p>
       <div class="report-summary">
-        <div class="report-stat"><span>Income</span><strong class="income">{{ report_income|floatformat:2 }}</strong></div>
-        <div class="report-stat"><span>Expenses</span><strong class="expense">{{ report_expenses|floatformat:2 }}</strong></div>
-        <div class="report-stat"><span>Monthly balance</span><strong>{{ report_balance|floatformat:2 }}</strong></div>
+        <div class="report-stat"><span>{% tr "Income" %}</span><strong class="income">{{ report_income|floatformat:2 }}</strong></div>
+        <div class="report-stat"><span>{% tr "Expenses" %}</span><strong class="expense">{{ report_expenses|floatformat:2 }}</strong></div>
+        <div class="report-stat"><span>{% tr "Monthly balance" %}</span><strong>{{ report_balance|floatformat:2 }}</strong></div>
       </div>
       <div class="report-charts">
         <div>
-          <h3>Income by category</h3>
+          <h3>{% tr "Income by category" %}</h3>
           {% for item in report_income_categories %}
             <div class="bar-row"><div class="bar-meta"><span>{{ item.category }}</span><strong>{{ item.total|floatformat:2 }}</strong></div><div class="bar-track"><div class="bar-fill income-fill" style="width: {{ item.bar_width }}%"></div></div></div>
-          {% empty %}<p class="empty">No income recorded for this month.</p>{% endfor %}
+          {% empty %}<p class="empty">{% tr "No income recorded for this month." %}</p>{% endfor %}
         </div>
         <div>
-          <h3>Expenses by category</h3>
+          <h3>{% tr "Expenses by category" %}</h3>
           {% for item in report_expense_categories %}
             <div class="bar-row"><div class="bar-meta"><span>{{ item.category }}</span><strong>{{ item.total|floatformat:2 }}</strong></div><div class="bar-track"><div class="bar-fill expense-fill" style="width: {{ item.bar_width }}%"></div></div></div>
-          {% empty %}<p class="empty">No expenses recorded for this month.</p>{% endfor %}
+          {% empty %}<p class="empty">{% tr "No expenses recorded for this month." %}</p>{% endfor %}
         </div>
       </div>
     </section>

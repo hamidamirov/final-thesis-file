@@ -1,9 +1,10 @@
+{% load ui %}
 <!doctype html>
-<html lang="en">
+<html lang="{{ site_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Log in | Student Finance</title>
+  <title>{% tr "Log in" %} | {% tr "Student Finance" %}</title>
   <style>
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f3f6fb; color: #172033; font-family: Arial, sans-serif; }
     main { width: min(400px, calc(100% - 32px)); padding: 30px; background: white; border: 1px solid #e0e7f0; border-radius: 12px; box-shadow: 0 8px 30px #17203312; }
@@ -11,17 +12,26 @@
     input { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #ccd6e3; border-radius: 7px; }
     button { margin-top: 20px; width: 100%; padding: 12px; border: 0; border-radius: 7px; background: #1675d1; color: white; font-weight: 700; cursor: pointer; }
     .errorlist { color: #b42318; }
+    .preferences { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-bottom: 20px; }
+    .preferences label { flex: 1; margin: 0; font-size: 12px; }
+    .preferences select { width: 100%; padding: 8px; }
+    .preferences button { width: auto; margin: 0; padding: 9px 12px; }
+    body[data-theme="dark"] { background: #111827; color: #e7edf5; }
+    body[data-theme="dark"] main { background: #1c2736; border-color: #344357; }
+    body[data-theme="dark"] input, body[data-theme="dark"] select { background: #111827; color: #e7edf5; border-color: #52647a; }
+    body[data-theme="dark"] a { color: #8fc1ff; }
   </style>
 </head>
-<body><main>
-  <h1>Student Finance</h1><p>Log in to manage your transactions.</p>
+<body data-theme="{{ site_theme }}"><main>
+  {% include "includes/preferences.html" %}
+  <h1>{% tr "Student Finance" %}</h1><p>{% tr "Log in to manage your transactions." %}</p>
   <form method="post">{% csrf_token %}
     {{ form.non_field_errors }}
-    <label for="id_username">Username</label>{{ form.username }}
-    <label for="id_password">Password</label>{{ form.password }}
+    <label for="id_username">{% tr "Username" %}</label>{{ form.username }}
+    <label for="id_password">{% tr "Password" %}</label>{{ form.password }}
     <input type="hidden" name="next" value="{{ next }}">
-    <button type="submit">Log in</button>
+    <button type="submit">{% tr "Log in" %}</button>
   </form>
-  <p>New here? <a href="{% url 'signup' %}">Create an account</a></p>
+  <p>{% tr "New here?" %} <a href="{% url 'signup' %}">{% tr "Create an account" %}</a></p>
 </main></body>
 </html>
