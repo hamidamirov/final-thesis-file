@@ -55,6 +55,10 @@
     .goal-fill { height: 100%; background: #16834a; border-radius: inherit; }
     .goal-contribution { display: flex; align-items: end; gap: 8px; }
     .goal-contribution label { flex: 1; margin: 0; }
+    .tip-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .tip-item { border-left: 4px solid #1675d1; background: #f7f9fc; border-radius: 8px; padding: 16px; }
+    .tip-item h3 { margin: 0 0 8px; font-size: 16px; }
+    .tip-category { color: #66758b; font-size: 12px; text-transform: uppercase; }
     @media (max-width: 760px) { .cards, .content, .report-charts, .report-summary { grid-template-columns: 1fr; } main { margin-top: 20px; } .month-filter, .transaction-filter { align-items: stretch; flex-direction: column; } }
   </style>
 </head>
@@ -108,6 +112,20 @@
           {% else %}<p class="empty">No transactions yet. Add your first one using the form.</p>{% endif %}
         {% endif %}
       </div>
+    </section>
+    <section class="panel" style="margin-top: 20px">
+      <h2>Financial tips</h2>
+      {% if financial_tips %}
+        <div class="tip-list">
+          {% for tip in financial_tips %}
+            <article class="tip-item">
+              {% if tip.category %}<div class="tip-category">{{ tip.category }}</div>{% endif %}
+              <h3>{{ tip.title }}</h3>
+              <p>{{ tip.content|linebreaksbr }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p class="empty">No financial tips are available right now.</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
       <h2>Savings goals</h2>

@@ -16,7 +16,13 @@ from .forms import (
     SavingsGoalForm,
     TransactionForm,
 )
-from .models import Budget, SavingsGoal, Transaction, first_day_of_current_month
+from .models import (
+    Budget,
+    FinancialTip,
+    SavingsGoal,
+    Transaction,
+    first_day_of_current_month,
+)
 
 
 def signup(request):
@@ -146,6 +152,7 @@ def dashboard(request):
             100, round(float(goal.saved_amount / goal.target_amount * 100))
         )
         goal.remaining_amount = max(Decimal("0.00"), goal.target_amount - goal.saved_amount)
+    financial_tips = FinancialTip.objects.filter(is_active=True)
 
     # A month-specific report, scoped to the signed-in user's transactions.
     month_value = request.GET.get("month", "")
@@ -204,6 +211,7 @@ def dashboard(request):
             "goal_form": goal_form,
             "contribution_form": contribution_form,
             "savings_goals": savings_goals,
+            "financial_tips": financial_tips,
             "current_month": month_start,
             "report_month": report_month,
             "report_income": report_income,

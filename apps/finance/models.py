@@ -67,6 +67,22 @@ class SavingsGoal(models.Model):
         return self.name
 
 
+class FinancialTip(models.Model):
+    title = models.CharField(max_length=160)
+    category = models.CharField(max_length=80, blank=True)
+    content = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "title"]
+        verbose_name = "financial tip"
+        verbose_name_plural = "financial tips"
+
+    def __str__(self):
+        return self.title
+
+
 class Transaction(models.Model):
     class Type(models.TextChoices):
         INCOME = "income", "Income"

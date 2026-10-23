@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Budget, SavingsGoal, Transaction
+from .models import Budget, FinancialTip, SavingsGoal, Transaction
 
 
 @admin.register(Budget)
@@ -22,3 +22,10 @@ class TransactionAdmin(admin.ModelAdmin):
 class SavingsGoalAdmin(admin.ModelAdmin):
     list_display = ("name", "user", "saved_amount", "target_amount", "target_date")
     search_fields = ("name", "user__username")
+
+
+@admin.register(FinancialTip)
+class FinancialTipAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "is_active", "created_at")
+    list_filter = ("is_active", "category")
+    search_fields = ("title", "content", "category")
