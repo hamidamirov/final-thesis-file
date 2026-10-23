@@ -37,6 +37,36 @@ class Budget(models.Model):
         return f"{self.category} budget ({self.month:%Y-%m})"
 
 
+class SavingsGoal(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="finance_savings_goals",
+    )
+    name = models.CharField(max_length=120)
+    target_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+    )
+    saved_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)],
+    )
+    target_date = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["target_date", "name"]
+        verbose_name = "savings goal"
+        verbose_name_plural = "savings goals"
+
+    def __str__(self):
+        return self.name
+
+
 class Transaction(models.Model):
     class Type(models.TextChoices):
         INCOME = "income", "Income"

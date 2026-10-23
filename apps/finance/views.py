@@ -9,8 +9,14 @@ from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import BudgetForm, RegistrationForm, TransactionForm
-from .models import Budget, Transaction, first_day_of_current_month
+from .forms import (
+    BudgetForm,
+    GoalContributionForm,
+    RegistrationForm,
+    SavingsGoalForm,
+    TransactionForm,
+)
+from .models import Budget, SavingsGoal, Transaction, first_day_of_current_month
 
 
 def signup(request):
@@ -26,7 +32,8 @@ def signup(request):
 
 @login_required
 def dashboard(request):
-    if request.method == "POST" and request.POST.get("form_type") == "budget":
+    form_type = request.POST.get("form_type") if request.method == "POST" else ""
+    if form_type == "budget":
         form = TransactionForm()
         budget_form = BudgetForm(request.POST)
         if budget_form.is_valid():
@@ -39,9 +46,33 @@ def dashboard(request):
             )
             messages.success(request, "Monthly budget saved successfully.")
             return redirect("home")
-    elif request.method == "POST":
+    elif form_type == "savings_goal":
+        form = TransactionForm()
+        budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
+        goal_form = SavingsGoalForm(request.POST)
+        if goal_form.is_valid():
+            goal = goal_form.save(commit=False)
+            goal.user = request.user
+            goal.save()
+            messages.success(request, "Savings goal created successfully.")
+            return redirect("home")
+    elif form_type == "goal_contribution":
+        form = TransactionForm()
+        budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
+        goal_form = SavingsGoalForm()
+        contribution_form = GoalContributionForm(request.POST)
+        goal = get_object_or_404(
+            SavingsGoal, pk=request.POST.get("goal_id"), user=request.user
+        )
+        if contribution_form.is_valid():
+            goal.saved_amount += contribution_form.cleaned_data["amount"]
+            goal.save(update_fields=["saved_amount"])
+            messages.success(request, f"Progress updated for {goal.name}.")
+            return redirect("home")
+    elif form_type == "transaction":
         form = TransactionForm(request.POST)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
+        goal_form = SavingsGoalForm()
         if form.is_valid():
             transaction = form.save(commit=False)
             transaction.user = request.user
@@ -51,6 +82,12 @@ def dashboard(request):
     else:
         form = TransactionForm()
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
+        goal_form = SavingsGoalForm()
+
+    if "goal_form" not in locals():
+        goal_form = SavingsGoalForm()
+    if "contribution_form" not in locals():
+        contribution_form = GoalContributionForm()
 
     user_transactions = Transaction.objects.filter(user=request.user)
     transaction_list = user_transactions
@@ -102,6 +139,13 @@ def dashboard(request):
             or Decimal("0.00")
         )
         budget.remaining = budget.amount - budget.spent
+
+    savings_goals = SavingsGoal.objects.filter(user=request.user)
+    for goal in savings_goals:
+        goal.progress_percent = min(
+            100, round(float(goal.saved_amount / goal.target_amount * 100))
+        )
+        goal.remaining_amount = max(Decimal("0.00"), goal.target_amount - goal.saved_amount)
 
     # A month-specific report, scoped to the signed-in user's transactions.
     month_value = request.GET.get("month", "")
@@ -157,6 +201,9 @@ def dashboard(request):
             "balance": income - expenses,
             "budget_form": budget_form,
             "budgets": budgets,
+            "goal_form": goal_form,
+            "contribution_form": contribution_form,
+            "savings_goals": savings_goals,
             "current_month": month_start,
             "report_month": report_month,
             "report_income": report_income,

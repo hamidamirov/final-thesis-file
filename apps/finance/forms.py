@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import Budget, Transaction
+from .models import Budget, SavingsGoal, Transaction
 
 
 class BudgetForm(forms.ModelForm):
@@ -13,6 +13,22 @@ class BudgetForm(forms.ModelForm):
 
     def clean_month(self):
         return self.cleaned_data["month"].replace(day=1)
+
+
+class SavingsGoalForm(forms.ModelForm):
+    class Meta:
+        model = SavingsGoal
+        fields = ["name", "target_amount", "target_date"]
+        widgets = {"target_date": forms.DateInput(attrs={"type": "date"})}
+
+
+class GoalContributionForm(forms.Form):
+    amount = forms.DecimalField(
+        min_value=0.01,
+        max_digits=12,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={"min": "0.01", "step": "0.01"}),
+    )
 
 
 class TransactionForm(forms.ModelForm):

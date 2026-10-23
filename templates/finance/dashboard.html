@@ -47,6 +47,14 @@
     .transaction-filter input, .transaction-filter select { min-width: 0; flex: 1 1 145px; }
     .transaction-filter input[type="search"] { flex-basis: 220px; }
     .transaction-filter a { white-space: nowrap; }
+    .goal-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .goal-item { border: 1px solid #e8edf3; border-radius: 9px; padding: 16px; }
+    .goal-heading { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .goal-heading h3 { margin: 0; font-size: 16px; }
+    .goal-track { height: 10px; margin: 12px 0; background: #e8edf3; border-radius: 999px; overflow: hidden; }
+    .goal-fill { height: 100%; background: #16834a; border-radius: inherit; }
+    .goal-contribution { display: flex; align-items: end; gap: 8px; }
+    .goal-contribution label { flex: 1; margin: 0; }
     @media (max-width: 760px) { .cards, .content, .report-charts, .report-summary { grid-template-columns: 1fr; } main { margin-top: 20px; } .month-filter, .transaction-filter { align-items: stretch; flex-direction: column; } }
   </style>
 </head>
@@ -100,6 +108,34 @@
           {% else %}<p class="empty">No transactions yet. Add your first one using the form.</p>{% endif %}
         {% endif %}
       </div>
+    </section>
+    <section class="panel" style="margin-top: 20px">
+      <h2>Savings goals</h2>
+      <form method="post" style="max-width: 340px; margin-bottom: 24px">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="savings_goal">
+        {% for field in goal_form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
+        <p><button type="submit">Create savings goal</button></p>
+      </form>
+      {% if savings_goals %}
+        <div class="goal-list">
+          {% for goal in savings_goals %}
+            <article class="goal-item">
+              <div class="goal-heading"><h3>{{ goal.name }}</h3><strong>{{ goal.progress_percent }}%</strong></div>
+              <div class="goal-track" role="progressbar" aria-label="{{ goal.name }} progress" aria-valuenow="{{ goal.progress_percent }}" aria-valuemin="0" aria-valuemax="100"><div class="goal-fill" style="width: {{ goal.progress_percent }}%"></div></div>
+              <p>{{ goal.saved_amount|floatformat:2 }} saved of {{ goal.target_amount|floatformat:2 }} · {{ goal.remaining_amount|floatformat:2 }} remaining</p>
+              {% if goal.target_date %}<p>Target date: {{ goal.target_date|date:"M j, Y" }}</p>{% endif %}
+              <form method="post" class="goal-contribution">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="goal_contribution">
+                <input type="hidden" name="goal_id" value="{{ goal.pk }}">
+                <label>Add savings {{ contribution_form.amount }}{{ contribution_form.amount.errors }}</label>
+                <button type="submit">Add</button>
+              </form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p class="empty">No savings goals yet. Create one to track your progress.</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
       <h2>Monthly budgets — {{ current_month|date:"F Y" }}</h2>
