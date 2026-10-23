@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} | Student Finance</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f3f6fb; color: #172033; font-family: Arial, sans-serif; }
+    main { width: min(500px, calc(100% - 32px)); padding: 28px; background: white; border: 1px solid #e0e7f0; border-radius: 12px; }
+    label { display: block; margin: 14px 0 6px; font-weight: 700; }
+    input, select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccd6e3; border-radius: 7px; }
+    button { padding: 11px 16px; border: 0; border-radius: 7px; background: #1675d1; color: white; font-weight: 700; cursor: pointer; }
+    .cancel { margin-left: 12px; }
+    .errorlist { color: #b42318; }
+  </style>
+</head>
+<body><main>
+  <h1>{{ title }}</h1>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
+    <p><button type="submit">{{ button_label }}</button><a class="cancel" href="{% url 'home' %}">Cancel</a></p>
+  </form>
+</main></body>
+</html>
