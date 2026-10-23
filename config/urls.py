@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from apps.core.views import database_health
+from apps.core.views import database_health, save_preferences
 from apps.finance.views import (
     dashboard,
     monthly_report_csv,
@@ -21,4 +21,5 @@ urlpatterns = [
     path("reports/monthly.csv", monthly_report_csv, name="monthly_report_csv"),
     path("", dashboard, name="home"),
     path("health/database/", database_health, name="database_health"),
+    path("preferences/", save_preferences, name="save_preferences"),
 ]

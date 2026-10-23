@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from apps.core.ui_text import translate_ui
+
 from .forms import (
     BudgetForm,
     GoalContributionForm,
@@ -42,12 +44,16 @@ def signup(request):
 
 @login_required
 def dashboard(request):
+    language = request.session.get("site_language", "en")
     if request.method == "POST" and request.POST.get("challenge_action") == "start":
         challenge = get_object_or_404(
             SavingChallenge, pk=request.POST.get("challenge_id"), is_active=True
         )
         UserChallenge.objects.get_or_create(user=request.user, challenge=challenge)
-        messages.success(request, f"You joined the {challenge.title} challenge.")
+        messages.success(
+            request,
+            translate_ui("You joined the {title} challenge.", language, title=challenge.title),
+        )
         return redirect("home")
     if request.method == "POST" and request.POST.get("challenge_action") == "complete":
         enrollment = get_object_or_404(
@@ -59,12 +65,19 @@ def dashboard(request):
         if enrollment.completed_at is None:
             enrollment.completed_at = timezone.now()
             enrollment.save(update_fields=["completed_at"])
-            messages.success(request, f"You completed the {enrollment.challenge.title} challenge.")
+            messages.success(
+                request,
+                translate_ui(
+                    "You completed the {title} challenge.",
+                    language,
+                    title=enrollment.challenge.title,
+                ),
+            )
         return redirect("home")
 
     form_type = request.POST.get("form_type") if request.method == "POST" else ""
     if form_type == "budget":
-        form = TransactionForm()
+        form = TransactionForm(language=language)
         budget_form = BudgetForm(request.POST)
         if budget_form.is_valid():
             budget = budget_form.save(commit=False)
@@ -74,20 +87,20 @@ def dashboard(request):
                 month=budget.month,
                 defaults={"amount": budget.amount},
             )
-            messages.success(request, "Monthly budget saved successfully.")
+            messages.success(request, translate_ui("Monthly budget saved successfully.", language))
             return redirect("home")
     elif form_type == "savings_goal":
-        form = TransactionForm()
+        form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm(request.POST)
         if goal_form.is_valid():
             goal = goal_form.save(commit=False)
             goal.user = request.user
             goal.save()
-            messages.success(request, "Savings goal created successfully.")
+            messages.success(request, translate_ui("Savings goal created successfully.", language))
             return redirect("home")
     elif form_type == "goal_contribution":
-        form = TransactionForm()
+        form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
         contribution_form = GoalContributionForm(request.POST)
@@ -97,20 +110,23 @@ def dashboard(request):
         if contribution_form.is_valid():
             goal.saved_amount += contribution_form.cleaned_data["amount"]
             goal.save(update_fields=["saved_amount"])
-            messages.success(request, f"Progress updated for {goal.name}.")
+            messages.success(
+                request,
+                translate_ui("Progress updated for {name}.", language, name=goal.name),
+            )
             return redirect("home")
     elif form_type == "transaction":
-        form = TransactionForm(request.POST)
+        form = TransactionForm(request.POST, language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
         if form.is_valid():
             transaction = form.save(commit=False)
             transaction.user = request.user
             transaction.save()
-            messages.success(request, "Transaction added successfully.")
+            messages.success(request, translate_ui("Transaction added successfully.", language))
             return redirect("home")
     else:
-        form = TransactionForm()
+        form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
 
@@ -244,7 +260,7 @@ def dashboard(request):
         "finance/dashboard.html",
         {
             "form": form,
-            "transactions": transaction_list,
+        "transactions": transaction_list,
             "search_query": search_query,
             "selected_type": selected_type,
             "selected_transaction_month": selected_transaction_month,
@@ -334,14 +350,18 @@ def monthly_report_csv(request):
 @login_required
 def transaction_edit(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
+    language = request.session.get("site_language", "en")
     if request.method == "POST":
-        form = TransactionForm(request.POST, instance=transaction)
+        form = TransactionForm(request.POST, instance=transaction, language=language)
         if form.is_valid():
             form.save()
-            messages.success(request, "Transaction updated successfully.")
+            messages.success(
+                request,
+                translate_ui("Transaction updated successfully.", language),
+            )
             return redirect("home")
     else:
-        form = TransactionForm(instance=transaction)
+        form = TransactionForm(instance=transaction, language=language)
     return render(
         request,
         "finance/transaction_form.html",
@@ -354,6 +374,12 @@ def transaction_delete(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
     if request.method == "POST":
         transaction.delete()
-        messages.success(request, "Transaction deleted successfully.")
+        messages.success(
+            request,
+            translate_ui(
+                "Transaction deleted successfully.",
+                request.session.get("site_language", "en"),
+            ),
+        )
         return redirect("home")
     return render(request, "finance/transaction_confirm_delete.html", {"transaction": transaction})

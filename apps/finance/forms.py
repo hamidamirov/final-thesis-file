@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
+from apps.core.ui_text import translate_ui
+
 from .models import Budget, SavingsGoal, Transaction
 
 
@@ -32,6 +34,13 @@ class GoalContributionForm(forms.Form):
 
 
 class TransactionForm(forms.ModelForm):
+    def __init__(self, *args, language="en", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["type"].choices = [
+            (value, translate_ui(label, language))
+            for value, label in self.fields["type"].choices
+        ]
+
     class Meta:
         model = Transaction
         fields = ["type", "category", "amount", "date", "note"]
