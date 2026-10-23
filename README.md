@@ -1,65 +1,71 @@
-# Tələbə maliyyəsinin idarə edilməsi
+# Student Finance Management
 
-Universitet tələbələri üçün şəxsi maliyyəni qeyd etməyə kömək edən bakalavr işi layihəsi. Hazırkı mərhələ Django əsaslı ilkin skeletdir; hesablar və maliyyə funksiyaları hələ əlavə edilməyib.
+A Django web application that helps university students track personal income, expenses, and monthly category budgets. Users can create an account, manage their own transactions, and review their financial totals from a dashboard.
 
-## Tələblər
+## Requirements
 
-- Python 3.10 və ya daha yeni versiya
+- Python 3.10 or newer
 - MySQL Server
-- VS Code və onun inteqrasiya olunmuş terminalı
+- Git
 
-## Windows-da yerli qurulum
+## Local setup on Windows
 
-VS Code-da layihə qovluğunu açın və **Terminal → New Terminal** seçin.
+Open this project folder in VS Code, then select **Terminal → New Terminal**.
 
-1. Python-un quraşdırıldığını yoxlayın:
-
-   ```powershell
-   python --version
-   ```
-
-2. Layihə üçün ayrıca virtual mühit yaradın və aktivləşdirin. Bu, kitabxanaları kompüterdəki digər Python layihələrindən ayırır:
+1. Create and activate a virtual environment:
 
    ```powershell
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    ```
 
-3. Lazım olan Python kitabxanalarını quraşdırın:
+2. Install the Python dependencies:
 
    ```powershell
    python -m pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
-   MySQL sürücüsü Django sənədlərinin tövsiyə etdiyi `mysqlclient`-dir. Windows-da quraşdırma xətası çıxarsa, xəta mətnini paylaşın; uyğun həlli seçək.
-
-4. Nümunə mühit faylının surətini yaradın:
+3. Create your local environment file:
 
    ```powershell
    Copy-Item .env.example .env
    ```
 
-   Sonra `.env` faylını VS Code-da açıb öz kompüterinizdə istifadə etdiyiniz MySQL verilənlər bazası, istifadəçi və parol dəyərlərini yazın. `DJANGO_SECRET_KEY` üçün də uzun, təsadüfi dəyər təyin edin. `.env` faylını GitHub-a yükləməyin.
+   Update `.env` with your own Django secret key and MySQL connection settings. Never commit `.env` or share its contents. The `.env.example` file contains placeholders only.
 
-5. MySQL-də `student_finance` adlı verilənlər bazası yaradın. Məsələn, MySQL terminalında:
+4. Create the database in MySQL. For example:
 
    ```sql
    CREATE DATABASE student_finance CHARACTER SET utf8mb4;
    ```
 
-   `.env` daxilindəki `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` və `DB_PORT` dəyərləri sizin MySQL sazlamalarınıza uyğun olmalıdır.
+   Make sure `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and `DB_PORT` in `.env` match your MySQL configuration.
 
-6. Tətbiqi başladın:
+5. Create the database tables and an administrator account:
+
+   ```powershell
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+6. Start the development server:
 
    ```powershell
    python manage.py runserver
    ```
 
-   Brauzerdə `http://127.0.0.1:8000/` ünvanını açın. Verilənlər bazası bağlantısını `http://127.0.0.1:8000/health/database/` ünvanında yoxlayın. Uğurlu cavab `{"status":"ok"}` olacaq; bağlantı qurulmayıbsa, endpoint `503` qaytaracaq.
+   Open `http://127.0.0.1:8000/` in your browser. The database health endpoint is `http://127.0.0.1:8000/health/database/`.
 
-## Qeydlər
+## Main features
 
-- Django admin ünvanı `/admin/`-dir. Admin istifadəçisi hələ yaradılmayıb.
-- Məlumat bazası sxemi və tətbiq funksiyaları ayrıca razılaşdırılıb növbəti mərhələlərdə əlavə ediləcək.
-- `.env.example` yalnız nümunə açar adları və saxta doldurucu dəyərlər saxlayır.
+- User registration and login
+- Income and expense tracking
+- Transaction categories, dates, and notes
+- Dashboard totals and recent transactions
+- Monthly category budgets
+- Django admin interface at `/admin/`
+
+## GitHub safety
+
+The `.gitignore` file excludes `.env` and virtual environment folders. Review `git status` before committing to make sure that credentials and other private files are not included.
