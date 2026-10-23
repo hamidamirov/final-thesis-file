@@ -22,6 +22,7 @@ from .models import (
     FinancialTip,
     SavingChallenge,
     SavingsGoal,
+    StudentOffer,
     Transaction,
     UserChallenge,
     first_day_of_current_month,
@@ -176,6 +177,19 @@ def dashboard(request):
         )
         goal.remaining_amount = max(Decimal("0.00"), goal.target_amount - goal.saved_amount)
     financial_tips = FinancialTip.objects.filter(is_active=True)
+    available_offers = StudentOffer.objects.filter(is_active=True).filter(
+        Q(valid_until__isnull=True) | Q(valid_until__gte=timezone.localdate())
+    )
+    offer_categories = list(
+        available_offers.order_by("category")
+        .values_list("category", flat=True)
+        .distinct()
+    )
+    selected_offer_category = request.GET.get("offer_category", "").strip()
+    if selected_offer_category in offer_categories:
+        available_offers = available_offers.filter(category=selected_offer_category)
+    else:
+        selected_offer_category = ""
     saving_challenges = list(SavingChallenge.objects.filter(is_active=True))
     challenge_entries = {
         entry.challenge_id: entry
@@ -244,6 +258,9 @@ def dashboard(request):
             "contribution_form": contribution_form,
             "savings_goals": savings_goals,
             "financial_tips": financial_tips,
+            "student_offers": available_offers,
+            "offer_categories": offer_categories,
+            "selected_offer_category": selected_offer_category,
             "saving_challenges": saving_challenges,
             "current_month": month_start,
             "report_month": report_month,

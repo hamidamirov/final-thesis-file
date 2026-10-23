@@ -126,6 +126,26 @@ class UserChallenge(models.Model):
         return f"{self.user} — {self.challenge}"
 
 
+class StudentOffer(models.Model):
+    title = models.CharField(max_length=160)
+    provider = models.CharField(max_length=120)
+    category = models.CharField(max_length=80)
+    description = models.TextField()
+    discount_code = models.CharField(max_length=80, blank=True)
+    offer_url = models.URLField(blank=True)
+    valid_until = models.DateField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["category", "provider", "title"]
+        verbose_name = "student offer"
+        verbose_name_plural = "student offers"
+
+    def __str__(self):
+        return f"{self.provider}: {self.title}"
+
+
 class Transaction(models.Model):
     class Type(models.TextChoices):
         INCOME = "income", "Income"

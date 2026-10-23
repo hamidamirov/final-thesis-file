@@ -5,6 +5,7 @@ from .models import (
     FinancialTip,
     SavingChallenge,
     SavingsGoal,
+    StudentOffer,
     Transaction,
     UserChallenge,
 )
@@ -50,3 +51,10 @@ class UserChallengeAdmin(admin.ModelAdmin):
     list_display = ("user", "challenge", "started_at", "completed_at")
     list_filter = ("challenge", "completed_at")
     search_fields = ("user__username", "challenge__title")
+
+
+@admin.register(StudentOffer)
+class StudentOfferAdmin(admin.ModelAdmin):
+    list_display = ("title", "provider", "category", "is_active", "valid_until")
+    list_filter = ("is_active", "category")
+    search_fields = ("title", "provider", "category", "description", "discount_code")
