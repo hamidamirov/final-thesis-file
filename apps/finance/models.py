@@ -83,6 +83,49 @@ class FinancialTip(models.Model):
         return self.title
 
 
+class SavingChallenge(models.Model):
+    title = models.CharField(max_length=160)
+    description = models.TextField()
+    duration_days = models.PositiveSmallIntegerField(default=7)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["duration_days", "title"]
+        verbose_name = "saving challenge"
+        verbose_name_plural = "saving challenges"
+
+    def __str__(self):
+        return self.title
+
+
+class UserChallenge(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="finance_challenge_entries",
+    )
+    challenge = models.ForeignKey(
+        SavingChallenge,
+        on_delete=models.CASCADE,
+        related_name="participants",
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ["-started_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "challenge"],
+                name="unique_user_saving_challenge",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user} — {self.challenge}"
+
+
 class Transaction(models.Model):
     class Type(models.TextChoices):
         INCOME = "income", "Income"

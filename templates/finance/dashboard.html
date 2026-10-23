@@ -59,6 +59,10 @@
     .tip-item { border-left: 4px solid #1675d1; background: #f7f9fc; border-radius: 8px; padding: 16px; }
     .tip-item h3 { margin: 0 0 8px; font-size: 16px; }
     .tip-category { color: #66758b; font-size: 12px; text-transform: uppercase; }
+    .challenge-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .challenge-item { border: 1px solid #e8edf3; border-radius: 9px; padding: 16px; }
+    .challenge-item h3 { margin: 0 0 8px; font-size: 16px; }
+    .challenge-duration { color: #66758b; font-size: 13px; }
     @media (max-width: 760px) { .cards, .content, .report-charts, .report-summary { grid-template-columns: 1fr; } main { margin-top: 20px; } .month-filter, .transaction-filter { align-items: stretch; flex-direction: column; } }
   </style>
 </head>
@@ -112,6 +116,39 @@
           {% else %}<p class="empty">No transactions yet. Add your first one using the form.</p>{% endif %}
         {% endif %}
       </div>
+    </section>
+    <section class="panel" style="margin-top: 20px">
+      <h2>Saving challenges</h2>
+      {% if saving_challenges %}
+        <div class="challenge-list">
+          {% for challenge in saving_challenges %}
+            <article class="challenge-item">
+              <h3>{{ challenge.title }}</h3>
+              <p class="challenge-duration">{{ challenge.duration_days }} days</p>
+              <p>{{ challenge.description|linebreaksbr }}</p>
+              {% if challenge.user_entry %}
+                {% if challenge.user_entry.completed_at %}
+                  <strong class="income">Completed</strong>
+                {% else %}
+                  <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="challenge_action" value="complete">
+                    <input type="hidden" name="enrollment_id" value="{{ challenge.user_entry.pk }}">
+                    <button type="submit">Mark completed</button>
+                  </form>
+                {% endif %}
+              {% else %}
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="challenge_action" value="start">
+                  <input type="hidden" name="challenge_id" value="{{ challenge.pk }}">
+                  <button type="submit">Start challenge</button>
+                </form>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p class="empty">No saving challenges are available right now.</p>{% endif %}
     </section>
     <section class="panel" style="margin-top: 20px">
       <h2>Financial tips</h2>

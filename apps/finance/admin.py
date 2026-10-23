@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Budget, FinancialTip, SavingsGoal, Transaction
+from .models import (
+    Budget,
+    FinancialTip,
+    SavingChallenge,
+    SavingsGoal,
+    Transaction,
+    UserChallenge,
+)
 
 
 @admin.register(Budget)
@@ -29,3 +36,17 @@ class FinancialTipAdmin(admin.ModelAdmin):
     list_display = ("title", "category", "is_active", "created_at")
     list_filter = ("is_active", "category")
     search_fields = ("title", "content", "category")
+
+
+@admin.register(SavingChallenge)
+class SavingChallengeAdmin(admin.ModelAdmin):
+    list_display = ("title", "duration_days", "is_active", "created_at")
+    list_filter = ("is_active", "duration_days")
+    search_fields = ("title", "description")
+
+
+@admin.register(UserChallenge)
+class UserChallengeAdmin(admin.ModelAdmin):
+    list_display = ("user", "challenge", "started_at", "completed_at")
+    list_filter = ("challenge", "completed_at")
+    search_fields = ("user__username", "challenge__title")

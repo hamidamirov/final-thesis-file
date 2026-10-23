@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from .forms import (
     BudgetForm,
@@ -19,8 +20,10 @@ from .forms import (
 from .models import (
     Budget,
     FinancialTip,
+    SavingChallenge,
     SavingsGoal,
     Transaction,
+    UserChallenge,
     first_day_of_current_month,
 )
 
@@ -38,6 +41,26 @@ def signup(request):
 
 @login_required
 def dashboard(request):
+    if request.method == "POST" and request.POST.get("challenge_action") == "start":
+        challenge = get_object_or_404(
+            SavingChallenge, pk=request.POST.get("challenge_id"), is_active=True
+        )
+        UserChallenge.objects.get_or_create(user=request.user, challenge=challenge)
+        messages.success(request, f"You joined the {challenge.title} challenge.")
+        return redirect("home")
+    if request.method == "POST" and request.POST.get("challenge_action") == "complete":
+        enrollment = get_object_or_404(
+            UserChallenge,
+            pk=request.POST.get("enrollment_id"),
+            user=request.user,
+            challenge__is_active=True,
+        )
+        if enrollment.completed_at is None:
+            enrollment.completed_at = timezone.now()
+            enrollment.save(update_fields=["completed_at"])
+            messages.success(request, f"You completed the {enrollment.challenge.title} challenge.")
+        return redirect("home")
+
     form_type = request.POST.get("form_type") if request.method == "POST" else ""
     if form_type == "budget":
         form = TransactionForm()
@@ -153,6 +176,15 @@ def dashboard(request):
         )
         goal.remaining_amount = max(Decimal("0.00"), goal.target_amount - goal.saved_amount)
     financial_tips = FinancialTip.objects.filter(is_active=True)
+    saving_challenges = list(SavingChallenge.objects.filter(is_active=True))
+    challenge_entries = {
+        entry.challenge_id: entry
+        for entry in UserChallenge.objects.filter(
+            user=request.user, challenge__in=saving_challenges
+        )
+    }
+    for challenge in saving_challenges:
+        challenge.user_entry = challenge_entries.get(challenge.pk)
 
     # A month-specific report, scoped to the signed-in user's transactions.
     month_value = request.GET.get("month", "")
@@ -212,6 +244,7 @@ def dashboard(request):
             "contribution_form": contribution_form,
             "savings_goals": savings_goals,
             "financial_tips": financial_tips,
+            "saving_challenges": saving_challenges,
             "current_month": month_start,
             "report_month": report_month,
             "report_income": report_income,
