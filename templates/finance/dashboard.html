@@ -12,6 +12,7 @@
     header h1 { font-size: 20px; margin: 0; }
     header form { margin: 0; }
     button { border: 0; border-radius: 7px; padding: 11px 16px; background: #1675d1; color: white; font-weight: 700; cursor: pointer; }
+    .button-link { display: inline-block; border-radius: 7px; padding: 11px 16px; background: #e9f1fb; color: #173b67; font-weight: 700; text-decoration: none; }
     header button { background: transparent; border: 1px solid #b8cee8; }
     main { max-width: 1100px; margin: 32px auto; padding: 0 22px; }
     .welcome { margin-bottom: 22px; }
@@ -106,6 +107,7 @@
         </label>
         <button type="submit">View report</button>
       </form>
+      <p><a class="button-link" href="{% url 'monthly_report_csv' %}?month={{ report_month|date:'Y-m' }}">Download CSV</a></p>
       <div class="report-summary">
         <div class="report-stat"><span>Income</span><strong class="income">{{ report_income|floatformat:2 }}</strong></div>
         <div class="report-stat"><span>Expenses</span><strong class="expense">{{ report_expenses|floatformat:2 }}</strong></div>

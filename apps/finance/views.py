@@ -1,10 +1,12 @@
-from decimal import Decimal
+import csv
 from datetime import date
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import BudgetForm, RegistrationForm, TransactionForm
@@ -130,6 +132,64 @@ def dashboard(request):
             "report_expense_categories": report_expense_categories,
         },
     )
+
+
+@login_required
+def monthly_report_csv(request):
+    month_value = request.GET.get("month", "")
+    try:
+        year_text, month_text = month_value.split("-", maxsplit=1)
+        report_month = date(int(year_text), int(month_text), 1)
+    except (ValueError, TypeError):
+        report_month = first_day_of_current_month()
+
+    if report_month.month == 12:
+        next_month = date(report_month.year + 1, 1, 1)
+    else:
+        next_month = date(report_month.year, report_month.month + 1, 1)
+
+    transactions = Transaction.objects.filter(
+        user=request.user,
+        date__gte=report_month,
+        date__lt=next_month,
+    ).order_by("date", "created_at")
+    totals = transactions.aggregate(
+        income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
+        expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
+    )
+    income = totals["income"] or Decimal("0.00")
+    expenses = totals["expenses"] or Decimal("0.00")
+
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = (
+        f'attachment; filename="finance-report-{report_month:%Y-%m}.csv"'
+    )
+    response.write("\ufeff")  # Excel recognizes UTF-8 correctly with this marker.
+    writer = csv.writer(response)
+    writer.writerow(["Monthly Finance Report", report_month.strftime("%B %Y")])
+    writer.writerow(["Total income", income])
+    writer.writerow(["Total expenses", expenses])
+    writer.writerow(["Monthly balance", income - expenses])
+    writer.writerow([])
+    writer.writerow(["Date", "Type", "Category", "Amount", "Note"])
+
+    def safe_text(value):
+        value = str(value or "")
+        if value.startswith(("=", "+", "-", "@", "\t", "\r")):
+            return "'" + value
+        return value
+
+    for transaction in transactions:
+        writer.writerow(
+            [
+                transaction.date.isoformat(),
+                transaction.get_type_display(),
+                safe_text(transaction.category),
+                transaction.amount,
+                safe_text(transaction.note),
+            ]
+        )
+    return response
 
 
 @login_required
