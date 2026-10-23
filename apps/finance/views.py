@@ -53,6 +53,15 @@ def dashboard(request):
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
 
     user_transactions = Transaction.objects.filter(user=request.user)
+    transaction_list = user_transactions
+    search_query = request.GET.get("q", "").strip()
+    selected_type = request.GET.get("type", "")
+    if search_query:
+        transaction_list = transaction_list.filter(
+            Q(category__icontains=search_query) | Q(note__icontains=search_query)
+        )
+    if selected_type in Transaction.Type.values:
+        transaction_list = transaction_list.filter(type=selected_type)
     totals = user_transactions.aggregate(
         income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
         expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
@@ -117,7 +126,10 @@ def dashboard(request):
         "finance/dashboard.html",
         {
             "form": form,
-            "transactions": user_transactions,
+            "transactions": transaction_list,
+            "search_query": search_query,
+            "selected_type": selected_type,
+            "transaction_types": Transaction.Type.choices,
             "income_total": income,
             "expense_total": expenses,
             "balance": income - expenses,

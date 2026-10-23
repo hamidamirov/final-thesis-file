@@ -43,7 +43,10 @@
     .income-fill { background: #16834a; } .expense-fill { background: #d34a4a; }
     .month-filter { display: flex; align-items: end; gap: 12px; max-width: 420px; }
     .month-filter label { flex: 1; margin-top: 0; }
-    @media (max-width: 760px) { .cards, .content, .report-charts, .report-summary { grid-template-columns: 1fr; } main { margin-top: 20px; } .month-filter { align-items: stretch; flex-direction: column; } }
+    .transaction-filter { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .transaction-filter input, .transaction-filter select { min-width: 0; }
+    .transaction-filter a { white-space: nowrap; }
+    @media (max-width: 760px) { .cards, .content, .report-charts, .report-summary { grid-template-columns: 1fr; } main { margin-top: 20px; } .month-filter, .transaction-filter { align-items: stretch; flex-direction: column; } }
   </style>
 </head>
 <body>
@@ -72,6 +75,16 @@
       </div>
       <div class="panel">
         <h2>Recent transactions</h2>
+        <form method="get" class="transaction-filter">
+          <input type="hidden" name="month" value="{{ report_month|date:'Y-m' }}">
+          <input type="search" name="q" value="{{ search_query }}" placeholder="Search category or note">
+          <select name="type" aria-label="Filter by transaction type">
+            <option value="">All types</option>
+            {% for value, label in transaction_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <button type="submit">Filter</button>
+          <a href="{% url 'home' %}">Clear</a>
+        </form>
         {% if transactions %}
           <table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>Actions</th></tr></thead>
           <tbody>{% for transaction in transactions %}<tr>
@@ -80,7 +93,10 @@
             <td>{{ transaction.category }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
             <td><a href="{% url 'transaction_edit' transaction.pk %}">Edit</a> · <a href="{% url 'transaction_delete' transaction.pk %}">Delete</a></td>
           </tr>{% endfor %}</tbody></table>
-        {% else %}<p class="empty">No transactions yet. Add your first one using the form.</p>{% endif %}
+        {% else %}
+          {% if search_query or selected_type %}<p class="empty">No transactions match these filters. <a href="{% url 'home' %}">Clear filters</a></p>
+          {% else %}<p class="empty">No transactions yet. Add your first one using the form.</p>{% endif %}
+        {% endif %}
       </div>
     </section>
     <section class="panel" style="margin-top: 20px">
