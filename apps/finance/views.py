@@ -56,12 +56,33 @@ def dashboard(request):
     transaction_list = user_transactions
     search_query = request.GET.get("q", "").strip()
     selected_type = request.GET.get("type", "")
+    selected_transaction_month = request.GET.get("transaction_month", "").strip()
     if search_query:
         transaction_list = transaction_list.filter(
             Q(category__icontains=search_query) | Q(note__icontains=search_query)
         )
     if selected_type in Transaction.Type.values:
         transaction_list = transaction_list.filter(type=selected_type)
+    if selected_transaction_month:
+        try:
+            transaction_year_text, transaction_month_text = selected_transaction_month.split(
+                "-", maxsplit=1
+            )
+            transaction_month_start = date(
+                int(transaction_year_text), int(transaction_month_text), 1
+            )
+            if transaction_month_start.month == 12:
+                transaction_next_month = date(transaction_month_start.year + 1, 1, 1)
+            else:
+                transaction_next_month = date(
+                    transaction_month_start.year, transaction_month_start.month + 1, 1
+                )
+            transaction_list = transaction_list.filter(
+                date__gte=transaction_month_start,
+                date__lt=transaction_next_month,
+            )
+        except (ValueError, TypeError):
+            selected_transaction_month = ""
     totals = user_transactions.aggregate(
         income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
         expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
@@ -129,6 +150,7 @@ def dashboard(request):
             "transactions": transaction_list,
             "search_query": search_query,
             "selected_type": selected_type,
+            "selected_transaction_month": selected_transaction_month,
             "transaction_types": Transaction.Type.choices,
             "income_total": income,
             "expense_total": expenses,
