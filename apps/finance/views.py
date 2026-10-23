@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
@@ -70,6 +71,45 @@ def dashboard(request):
         )
         budget.remaining = budget.amount - budget.spent
 
+    # A month-specific report, scoped to the signed-in user's transactions.
+    month_value = request.GET.get("month", "")
+    try:
+        year_text, month_text = month_value.split("-", maxsplit=1)
+        report_month = date(int(year_text), int(month_text), 1)
+    except (ValueError, TypeError):
+        report_month = month_start
+
+    if report_month.month == 12:
+        next_month = date(report_month.year + 1, 1, 1)
+    else:
+        next_month = date(report_month.year, report_month.month + 1, 1)
+
+    report_transactions = user_transactions.filter(
+        date__gte=report_month,
+        date__lt=next_month,
+    )
+    report_totals = report_transactions.aggregate(
+        income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
+        expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
+    )
+    report_income = report_totals["income"] or Decimal("0.00")
+    report_expenses = report_totals["expenses"] or Decimal("0.00")
+
+    def category_report(transaction_type):
+        rows = list(
+            report_transactions.filter(type=transaction_type)
+            .values("category")
+            .annotate(total=Sum("amount"))
+            .order_by("-total", "category")
+        )
+        largest_total = max((row["total"] for row in rows), default=Decimal("0.00"))
+        for row in rows:
+            row["bar_width"] = round(float(row["total"] / largest_total * 100), 1)
+        return rows
+
+    report_income_categories = category_report(Transaction.Type.INCOME)
+    report_expense_categories = category_report(Transaction.Type.EXPENSE)
+
     return render(
         request,
         "finance/dashboard.html",
@@ -82,6 +122,12 @@ def dashboard(request):
             "budget_form": budget_form,
             "budgets": budgets,
             "current_month": month_start,
+            "report_month": report_month,
+            "report_income": report_income,
+            "report_expenses": report_expenses,
+            "report_balance": report_income - report_expenses,
+            "report_income_categories": report_income_categories,
+            "report_expense_categories": report_expense_categories,
         },
     )
 
