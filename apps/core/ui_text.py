@@ -102,6 +102,9 @@ EXTRA_TRANSLATIONS["uk"].update({
     "The website helps university students manage personal finances more effectively and understand where their money goes.": "Сайт допомагає студентам університетів ефективніше керувати особистими фінансами та розуміти, куди витрачаються їхні гроші.",
     "Show password": "Показати пароль", "Hide password": "Приховати пароль", "Slide 1": "Слайд 1", "Slide 2": "Слайд 2", "Slide 3": "Слайд 3", "Dashboard navigation": "Навігація панелі керування", "Student Finance dashboard preview": "Попередній перегляд панелі Student Finance",
 })
+EXTRA_TRANSLATIONS["lt"]["Delete selected items"] = "Ištrinti pasirinktus įrašus"
+EXTRA_TRANSLATIONS["az"]["Delete selected items"] = "Seçilmişləri sil"
+EXTRA_TRANSLATIONS["uk"]["Delete selected items"] = "Видалити вибрані записи"
 
 
 def translate_ui(text, language="en", **values):

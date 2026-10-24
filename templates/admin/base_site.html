@@ -11,7 +11,7 @@
 {% block extrastyle %}
   {{ block.super }}
   <style>
-    :root { --admin-ink: #173b67; --admin-blue: #1675d1; --admin-line: #d7e4f3; --admin-bg: #eef4fb; }
+    :root { --admin-ink: #173b67; --admin-blue: #1675d1; --admin-line: #d7e4f3; --admin-bg: #eef4fb; --delete-button-bg: #64748b; --delete-button-hover-bg: #475569; }
     html { color-scheme: light; }
     body { background: var(--admin-bg) !important; color: #172b45 !important; }
     #header { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 24px; padding: 10px clamp(18px, 4vw, 52px); background: #204d78 !important; color: #fff !important; }
@@ -21,6 +21,10 @@
     .admin-brand-copy { display: flex; flex-direction: column; gap: 3px; }
     .admin-brand-copy strong { font-size: 17px; }
     .admin-brand-copy small { color: #d5e6f7; font-size: 11px; }
+    #changelist .actions .action-select-hidden { display: none; }
+    #changelist .actions button.action-delete-button { display: inline-grid; width: 28px; height: 28px; place-items: center; margin-left: 8px; padding: 5px; border: 1px solid #d6e0ec !important; border-radius: 7px; color: #71839a !important; background: transparent !important; vertical-align: middle; cursor: pointer; transition: color .15s ease, background .15s ease, border-color .15s ease; }
+    #changelist .actions button.action-delete-button:hover { border-color: #efc3c6 !important; color: #bd3c45 !important; background: #fff1f2 !important; }
+    #changelist .actions button.action-delete-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
     #user-tools { display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex-wrap: wrap; float: none; margin: 0; color: #e8f2ff; font-size: 13px; }
     #user-tools .header-preferences { display: inline-flex; align-items: center; gap: 10px; }
     #user-tools .header-language-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #ffffff70; border-radius: 999px; background: #ffffff0c; }
@@ -54,6 +58,9 @@
     #content-main a:link, #content-main a:visited { color: var(--admin-blue); }
     .button, input[type=submit], input[type=button], .submit-row input, a.button { border-radius: 7px; background: var(--admin-blue); }
     .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover { background: #105fae; }
+    .object-tools a.addlink, .object-tools a.addlink:link, .object-tools a.addlink:visited { border-radius: 999px; background: #1675d1 !important; color: #fff !important; font-weight: 700; text-decoration: none; }
+    .object-tools a.addlink:hover, .object-tools a.addlink:focus { background: #105fae !important; color: #fff !important; }
+    .submit-row a.deletelink:link, .submit-row a.deletelink:visited { color: #fff !important; }
     input, select, textarea, .selector { border-color: #cbd9ea; border-radius: 6px; }
     #changelist-filter { border-left: 1px solid var(--admin-line); }
     #changelist, #changelist-form, #changelist-form .results, #result_list, #changelist .paginator { background: #fff !important; color: #29435d !important; }
