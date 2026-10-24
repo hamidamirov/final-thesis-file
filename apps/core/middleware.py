@@ -5,6 +5,7 @@ LANGUAGE_CODES = {
     "en": "en-us",
     "lt": "lt",
     "az": "az",
+    "uk": "uk",
 }
 
 

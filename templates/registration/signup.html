@@ -115,7 +115,7 @@
               {% if field.name == "password1" or field.name == "password2" %}
                 <div class="password-field field-row {% if field.errors %}has-errors{% endif %}">
                   {{ field }}
-                  <button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle="{{ field.id_for_label }}">
+                  <button class="password-toggle" type="button" aria-label="{% tr 'Show password' %}" data-hide-label="{% tr 'Hide password' %}" aria-pressed="false" data-password-toggle="{{ field.id_for_label }}">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                   </button>
                 </div>
@@ -133,19 +133,19 @@
     <section class="story-panel" aria-label="{% tr 'Personal finance for student life' %}">
       <div class="story-carousel" aria-label="{% tr 'Website overview slides' %}">
         <div class="story-track" id="story-track" aria-live="polite">
-          <article class="story-slide" aria-label="1 of 3">
+          <article class="story-slide" aria-label="{% tr 'Slide 1' %}">
             <p class="eyebrow">{% tr "Personal finance for student life" %}</p>
-            <h2>Personal Finance Management System for Students</h2>
-            <p>The website helps university students manage personal finances more effectively and understand where their money goes.</p>
+            <h2>{% tr "Personal Finance Management System for Students" %}</h2>
+            <p>{% tr "The website helps university students manage personal finances more effectively and understand where their money goes." %}</p>
             <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/dashboard</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Your finances in one place" %}</h3><div class="mini-summary"><span>{% tr "Income" %}<b>••••</b></span><span>{% tr "Expenses" %}<b>••••</b></span><span>{% tr "Balance" %}<b>••••</b></span></div><div class="mini-data"><p><span>{% tr "Recent transactions" %}</span><b>{% tr "View all" %} →</b></p><p><span>{% tr "Monthly budget" %}</span><b>{% tr "On track" %}</b></p></div></div></div></div>
           </article>
-          <article class="story-slide" aria-label="2 of 3">
+          <article class="story-slide" aria-label="{% tr 'Slide 2' %}">
             <p class="eyebrow">{% tr "Plan with clarity" %}</p>
             <h2>{% tr "Track transactions and monthly budgets" %}</h2>
             <p>{% tr "Record income and expenses and review them in one place." %} {% tr "Set category limits and see how much you have spent." %}</p>
             <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/budget</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Monthly budget" %}</h3><div class="mini-summary"><span>{% tr "Food" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Transport" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Books" %}<b>{% tr "Planned" %}</b></span></div><div class="mini-data"><p><span>{% tr "Food and essentials" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:62%"></span></div><p><span>{% tr "Transport" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:38%"></span></div></div></div></div></div>
           </article>
-          <article class="story-slide" aria-label="3 of 3">
+          <article class="story-slide" aria-label="{% tr 'Slide 3' %}">
             <p class="eyebrow">{% tr "Small steps, steady progress" %}</p>
             <h2>{% tr "Save, learn, and find student offers" %}</h2>
             <p>{% tr "Set a target and follow your savings progress over time." %} {% tr "Explore financial tips, saving challenges, and student discount offers." %}</p>
@@ -153,9 +153,9 @@
           </article>
         </div>
         <div class="carousel-dots" role="group" aria-label="{% tr 'Choose a slide' %}">
-          <button type="button" aria-label="Slide 1" aria-current="true" data-slide="0"></button>
-          <button type="button" aria-label="Slide 2" aria-current="false" data-slide="1"></button>
-          <button type="button" aria-label="Slide 3" aria-current="false" data-slide="2"></button>
+          <button type="button" aria-label="{% tr 'Slide 1' %}" aria-current="true" data-slide="0"></button>
+          <button type="button" aria-label="{% tr 'Slide 2' %}" aria-current="false" data-slide="1"></button>
+          <button type="button" aria-label="{% tr 'Slide 3' %}" aria-current="false" data-slide="2"></button>
         </div>
       </div>
     </section>
@@ -167,7 +167,7 @@
         const isVisible = input.type === "password";
         input.type = isVisible ? "text" : "password";
         button.setAttribute("aria-pressed", String(isVisible));
-        button.setAttribute("aria-label", isVisible ? "Hide password" : "Show password");
+        button.setAttribute("aria-label", isVisible ? button.dataset.hideLabel : button.getAttribute("aria-label"));
         button.innerHTML = isVisible
           ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.8 15.8 0 0 1-3.1 3.9"></path><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 3-.4"></path></svg>'
           : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
