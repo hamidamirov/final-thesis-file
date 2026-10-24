@@ -4,7 +4,52 @@ from django.contrib.auth.forms import UserCreationForm
 
 from apps.core.ui_text import translate_ui
 
-from .models import Budget, SavingsGoal, Transaction
+from .models import Budget, SavingsGoal, StudentProfile, Transaction
+
+
+class StudentProfileForm(forms.ModelForm):
+    profile_picture = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
+    )
+    remove_profile_picture = forms.BooleanField(required=False)
+
+    class Meta:
+        model = StudentProfile
+        fields = ["university"]
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        new_picture = self.cleaned_data.get("profile_picture")
+        remove_picture = self.cleaned_data.get("remove_profile_picture")
+        old_picture_name = profile.profile_picture.name if profile.profile_picture else ""
+        picture_storage = profile._meta.get_field("profile_picture").storage
+
+        if new_picture:
+            profile.profile_picture = new_picture
+        elif remove_picture:
+            profile.profile_picture = ""
+
+        if commit:
+            profile.save()
+            if old_picture_name and (new_picture or remove_picture):
+                picture_storage.delete(old_picture_name)
+        return profile
+
+
+class AccountDetailsForm(forms.ModelForm):
+    email = forms.EmailField(required=True, label="Email")
+
+    class Meta:
+        model = get_user_model()
+        fields = ["first_name", "last_name", "email"]
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        user_model = get_user_model()
+        if user_model.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
 
 
 class BudgetForm(forms.ModelForm):

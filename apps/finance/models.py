@@ -174,3 +174,16 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()}: {self.category} ({self.amount})"
+
+
+class StudentProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="student_profile",
+    )
+    university = models.CharField(max_length=180, blank=True)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"

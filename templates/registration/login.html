@@ -85,6 +85,15 @@
     .form-intro { margin: 9px 0 28px; color: #667b93; line-height: 1.5; }
     .login-form label { display: block; margin: 17px 0 7px; color: #233b56; font-size: 14px; font-weight: 700; }
     .login-form input:not([type="hidden"]) { width: 100%; min-height: 47px; padding: 11px 13px; border: 1px solid #cbd9ea; border-radius: 9px; background: white; }
+    .password-field { position: relative; }
+    .password-field input { padding-right: 48px !important; }
+    .password-toggle { position: absolute; top: 50%; right: 10px; display: grid; width: 34px; height: 34px; place-items: center; padding: 0; border: 0; border-radius: 7px; color: #607792; background: transparent; cursor: pointer; transform: translateY(-50%); }
+    .password-toggle:hover { color: #1675d1; background: #edf5fc; }
+    .password-toggle:focus-visible { outline: 2px solid #3989df; outline-offset: 2px; }
+    .password-toggle svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+    .password-options { display: flex; justify-content: flex-end; margin-top: 9px; }
+    .forgot-password { color: #2675bc; font-size: 13px; text-decoration: none; }
+    .forgot-password:hover { text-decoration: underline; }
     .login-form input:focus, .preferences select:focus { outline: none; border-color: #3989df; box-shadow: 0 0 0 3px #3989df24; }
     .errorlist { margin: 8px 0; padding-left: 20px; color: #b42318; font-size: 13px; }
     .primary-button, .create-button { display: flex; width: 100%; min-height: 47px; align-items: center; justify-content: center; border: 0; border-radius: 9px; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; transition: .15s ease; }
@@ -105,6 +114,9 @@
     body[data-theme="dark"] .separator { color: #a9bacf; }
     body[data-theme="dark"] .separator::before, body[data-theme="dark"] .separator::after { background: #344357; }
     body[data-theme="dark"] .admin-login a { color: #8fc1ff; }
+    body[data-theme="dark"] .password-toggle { color: #a9bacf; }
+    body[data-theme="dark"] .password-toggle:hover { color: #8fc1ff; background: #253347; }
+    body[data-theme="dark"] .forgot-password { color: #8fc1ff; }
     @media (max-width: 850px) { .auth-layout { grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr); } .story-panel { padding: 36px 25px; } .form-panel { padding-right: 28px; padding-left: 28px; } }
     @media (max-width: 680px) { .auth-layout { grid-template-columns: 1fr; } .form-panel { grid-column: 1; grid-row: 1; min-height: 100vh; padding: 18px 22px 38px; } .form-content { min-height: calc(100vh - 56px); } .auth-topbar { margin-bottom: 24px; padding-bottom: 16px; } .auth-register { font-size: 11px; } .auth-topbar .header-preferences { gap: 6px; } .auth-topbar .header-language-switch button { min-width: 29px; padding: 6px 5px; } .story-panel { grid-column: 1; grid-row: 2; min-height: auto; padding: 48px 24px; } .story-copy { text-align: center; } .mini-app { grid-template-columns: 82px minmax(0, 1fr); } .mini-nav { padding: 12px 6px; } .mini-content { padding: 10px; } }
   </style>
@@ -152,7 +164,14 @@
           <form method="post" class="login-form">{% csrf_token %}
             {{ form.non_field_errors }}
             <label for="id_username">{% tr "Username" %}</label>{{ form.username }}
-            <label for="id_password">{% tr "Password" %}</label>{{ form.password }}
+            <label for="id_password">{% tr "Password" %}</label>
+            <div class="password-field">
+              {{ form.password }}
+              <button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false" data-password-toggle="id_password">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+            <div class="password-options"><a class="forgot-password" href="{% url 'password_reset' %}">{% tr "Forgot password?" %}</a></div>
             <input type="hidden" name="next" value="{{ next }}">
             <button class="primary-button" type="submit">{% tr "Log in" %}</button>
           </form>
@@ -172,6 +191,18 @@
         dots.forEach((dot, dotIndex) => dot.setAttribute("aria-current", String(dotIndex === activeSlide)));
       };
       dots.forEach((dot) => dot.addEventListener("click", () => showSlide(Number(dot.dataset.slide))));
+      document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const input = document.getElementById(button.dataset.passwordToggle);
+          const isVisible = input.type === "password";
+          input.type = isVisible ? "text" : "password";
+          button.setAttribute("aria-pressed", String(isVisible));
+          button.setAttribute("aria-label", isVisible ? "Hide password" : "Show password");
+          button.innerHTML = isVisible
+            ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.8 15.8 0 0 1-3.1 3.9"></path><path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 3-.4"></path></svg>'
+            : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        });
+      });
       document.addEventListener("keydown", (event) => {
         if (!event.target.closest(".story-carousel")) return;
         if (event.key === "ArrowRight") showSlide(activeSlide + 1);

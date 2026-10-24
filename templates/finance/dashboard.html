@@ -123,64 +123,233 @@
       .panel { overflow-x: auto; }
       table { min-width: 560px; }
     }
+    /* Dashboard application layout. */
+    header { position: sticky; top: 0; z-index: 20; min-height: 72px; padding: 12px max(22px, calc((100% - 1480px) / 2)); }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #ffffff40; border-radius: 12px; background: #ffffff18; font-size: 15px; font-weight: 800; }
+    .brand-copy h1 { font-size: 18px; }
+    .brand-copy p { margin: 3px 0 0; color: #c7d9ed; font-size: 11px; }
+    .header-actions { display: flex; align-items: center; gap: 22px; }
+    .header-actions > div { display: flex; align-items: center; gap: 12px; }
+    .header-actions .preferences { margin: 0; }
+    .header-preferences { display: flex; align-items: center; gap: 14px; }
+    .header-language-switch { display: flex; align-items: center; padding: 3px; border: 1px solid #ffffff55; border-radius: 999px; }
+    .header-language-switch form { margin: 0; }
+    .header-language-switch button { min-width: 34px; padding: 6px 9px; border: 0; border-radius: 999px; color: #e9f2fc; background: transparent; font-size: 12px; }
+    .header-language-switch button[aria-current="true"] { color: #174675; background: #f4f8fc; }
+    .header-theme-toggle { margin: 0; }
+    .header-theme-toggle button { display: grid; width: 36px; height: 36px; place-items: center; padding: 0; border: 1px solid #ffffff55; border-radius: 50%; background: transparent; color: white; font-size: 18px; }
+    .student-identity { display: flex; align-items: center; gap: 9px; color: white; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .student-avatar { display: grid; width: 38px; height: 38px; place-items: center; overflow: hidden; border: 2px solid #ffffffaa; border-radius: 50%; background: #e8f2ff; color: #174675; font-size: 14px; }
+    .student-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .dashboard-layout { display: grid; grid-template-columns: 224px minmax(0, 1fr); max-width: 1480px; min-height: calc(100vh - 72px); margin: 0 auto; }
+    .dashboard-sidebar { position: sticky; top: 72px; align-self: start; height: calc(100vh - 72px); overflow-y: auto; padding: 26px 16px; border-right: 1px solid #dce7f4; background: #f8fbff; }
+    .sidebar-label { margin: 0 12px 12px; color: #8293a8; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+    .dashboard-nav { display: grid; gap: 5px; }
+    .dashboard-nav a { display: flex; align-items: center; gap: 11px; padding: 11px 12px; border-radius: 9px; color: #526982; font-size: 13px; font-weight: 600; text-decoration: none; transition: .15s ease; }
+    .dashboard-nav a:hover { color: #1768b5; background: #eaf3fd; }
+    .dashboard-nav a.active { color: #1768b5; background: #e4f0fd; box-shadow: inset 3px 0 #2582d8; }
+    .nav-icon { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 7px; background: #ffffff; color: #397cb8; font-size: 13px; }
+    main { width: 100%; max-width: none; margin: 0; padding: 28px clamp(20px, 3vw, 42px) 56px; }
+    .welcome { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 25px 28px; }
+    .welcome h2 { margin: 0 0 6px; }
+    .welcome p { margin: 0; }
+    .welcome-action { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; padding: 12px 17px; border-radius: 9px; color: white; background: #1675d1; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .welcome-action:hover { color: white; background: #0f63b6; }
+    .welcome-action { border: 0; cursor: pointer; font-family: inherit; }
+    .transaction-entry.attention { animation: transaction-focus 1.1s ease-out; }
+    @keyframes transaction-focus { 0%, 100% { box-shadow: 0 7px 22px #244a7210; } 35% { box-shadow: 0 0 0 5px #3989df35, 0 12px 30px #244a7230; } }
+    .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { min-height: 116px; }
+    .card span { display: flex; align-items: center; gap: 9px; }
+    .stat-icon { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 9px; color: #1768b5; background: #e9f3ff; font-size: 15px; font-weight: 800; }
+    .card:nth-child(2) .stat-icon { color: #b75151; background: #fff0f0; }
+    .card:nth-child(3) .stat-icon { color: #22865f; background: #eaf8f1; }
+    .content { grid-template-columns: minmax(280px, .88fr) minmax(0, 1.62fr); gap: 18px; }
+    .transaction-entry form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+    .transaction-entry label { margin: 0; }
+    .transaction-entry .field-group { min-width: 0; }
+    .transaction-entry .field-group:last-of-type { grid-column: 1 / -1; }
+    .transaction-entry .submit-row { grid-column: 1 / -1; margin: 0; }
+    .transaction-entry .submit-row button { width: 100%; }
+    .transaction-entry summary { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid #e6edf6; color: #172033; font-size: 19px; font-weight: 700; list-style: none; cursor: pointer; }
+    .transaction-entry summary::-webkit-details-marker { display: none; }
+    .transaction-entry summary::before { width: 4px; height: 20px; border-radius: 4px; background: #3989df; content: ""; }
+    .transaction-entry summary span { margin-left: auto; color: #3989df; font-size: 22px; }
+    .transaction-entry:not([open]) summary { padding-bottom: 0; border-bottom: 0; }
+    body[data-theme="dark"] .transaction-entry summary { color: #e7edf5; border-color: #344357; }
+    .panel { min-width: 0; }
+    .panel h2 { display: flex; align-items: center; gap: 9px; }
+    .panel h2::before { width: 4px; height: 20px; border-radius: 4px; background: #3989df; content: ""; }
+    .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; max-width: 760px; }
+    .profile-grid label { margin: 0 0 6px; }
+    .profile-grid .profile-field { min-width: 0; }
+    .profile-grid .profile-submit { grid-column: 1 / -1; }
+    .profile-grid .profile-span { grid-column: 1 / -1; }
+    .profile-current-picture { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; color: #657991; font-size: 13px; }
+    .profile-current-picture .student-avatar { width: 68px; height: 68px; border-color: #d4e2f1; font-size: 22px; }
+    .profile-photo-controls { display: grid; gap: 10px; max-width: 440px; }
+    .profile-photo-controls input[type="file"] { padding: 8px; }
+    .profile-remove-picture { display: flex; align-items: center; gap: 8px; color: #526982; font-size: 13px; font-weight: 600; }
+    .profile-remove-picture input { width: auto; min-height: auto; }
+    .profile-password-form { max-width: 520px; margin-top: 30px; padding-top: 22px; border-top: 1px solid #e6edf6; }
+    .profile-password-form label { margin: 14px 0 6px; }
+    .profile-password-form button { margin-top: 10px; }
+    body[data-theme="dark"] .profile-password-form { border-color: #344357; }
+    .transaction-filter { gap: 9px; }
+    .transaction-filter input[type="search"] { flex-basis: 190px; }
+    .transaction-filter button { min-height: 42px; }
+    .table-wrap { overflow-x: auto; }
+    .content table { min-width: 640px; }
+    .dashboard-recent h2 { margin-bottom: 10px; }
+    .recent-transaction-list { display: grid; }
+    .recent-transaction { display: flex; align-items: center; gap: 12px; padding: 13px 2px; border-bottom: 1px solid #e8edf3; }
+    .recent-transaction:last-child { border-bottom: 0; }
+    .recent-transaction-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: #eaf8f1; font-weight: 800; }
+    .recent-transaction-icon.expense { background: #fff0f0; }
+    .recent-transaction-copy { display: grid; min-width: 0; flex: 1; gap: 4px; }
+    .recent-transaction-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .recent-transaction-copy small { color: #71839a; }
+    .recent-history-link { display: inline-block; margin-top: 12px; font-size: 13px; font-weight: 700; text-decoration: none; }
+    body[data-theme="dark"] .recent-transaction { border-color: #344357; }
+    body[data-theme="dark"] .recent-transaction-copy small { color: #a9bacf; }
+    section[id] { scroll-margin-top: 92px; }
+    body[data-theme="dark"] .dashboard-sidebar { border-color: #344357; background: #151f2d; }
+    body[data-theme="dark"] .sidebar-label { color: #93a7bf; }
+    body[data-theme="dark"] .dashboard-nav a { color: #b9c9dc; }
+    body[data-theme="dark"] .dashboard-nav a:hover, body[data-theme="dark"] .dashboard-nav a.active { color: #a9d2ff; background: #22344a; }
+    body[data-theme="dark"] .nav-icon { color: #a9d2ff; background: #1c2736; }
+    body[data-theme="dark"] .stat-icon { color: #a9d2ff; background: #22364d; }
+    body[data-theme="dark"] .card:nth-child(2) .stat-icon { color: #ffbaba; background: #442c34; }
+    body[data-theme="dark"] .card:nth-child(3) .stat-icon { color: #8fe0bb; background: #1d3c36; }
+    @media (max-width: 900px) {
+      .dashboard-layout { grid-template-columns: 1fr; }
+      .dashboard-sidebar { position: sticky; top: 72px; z-index: 10; height: auto; padding: 8px 14px; border-right: 0; border-bottom: 1px solid #dce7f4; }
+      .sidebar-label { display: none; }
+      .dashboard-nav { display: flex; gap: 5px; overflow-x: auto; }
+      .dashboard-nav a { flex: 0 0 auto; padding: 9px 11px; }
+      .dashboard-nav a.active { box-shadow: inset 0 -3px #2582d8; }
+      .content { grid-template-columns: minmax(260px, .9fr) minmax(0, 1.3fr); }
+    }
+    @media (max-width: 680px) {
+      header { align-items: flex-start; }
+      .brand-copy p { display: none; }
+      .header-actions { gap: 10px; }
+      .header-actions > div { gap: 7px; }
+      .dashboard-sidebar { top: 64px; }
+      main { padding: 18px 14px 38px; }
+      .welcome { align-items: flex-start; flex-direction: column; padding: 20px; }
+      .welcome-action { width: 100%; justify-content: center; }
+      .cards, .content { grid-template-columns: 1fr; }
+      .cards { gap: 11px; }
+      .card { min-height: 96px; }
+      .transaction-filter { align-items: stretch; flex-direction: column; }
+      .transaction-entry form { grid-template-columns: 1fr; }
+      .transaction-entry .field-group:last-of-type, .transaction-entry .submit-row { grid-column: auto; }
+      .content table { min-width: 600px; }
+      .header-preferences { gap: 7px; }
+      .header-language-switch button { min-width: 29px; padding: 6px; }
+      .student-identity span:last-child { display: none; }
+      .profile-grid { grid-template-columns: 1fr; }
+      .profile-grid .profile-submit { grid-column: auto; }
+    }
   </style>
 </head>
 <body data-theme="{{ site_theme }}">
   <header>
-    <h1>{% tr "Student Finance" %}</h1>
-    {% include "includes/preferences.html" %}
-    <div style="display:flex;align-items:center;gap:10px">
-      {% if request.user.is_staff %}<a class="admin-link" href="{% url 'admin:index' %}">{% tr "Admin panel" %}</a>{% endif %}
-      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% tr "Log out" %}</button></form>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">SF</span><div class="brand-copy"><h1>{% tr "Student Finance" %}</h1><p>{% tr "Personal finance dashboard" %}</p></div></div>
+    <div class="header-actions">
+      {% include "includes/preferences.html" with header_mode=True %}
+      <div>
+        <div class="student-identity">
+          <span class="student-avatar" aria-hidden="true">{% if profile.profile_picture %}<img src="{{ profile.profile_picture.url }}" alt="">{% else %}{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{% endif %}</span>
+          <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+        </div>
+        {% if request.user.is_staff %}<a class="admin-link" href="{% url 'admin:index' %}">{% tr "Admin panel" %}</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% tr "Log out" %}</button></form>
+      </div>
     </div>
   </header>
-  <main>
-    <div class="welcome"><h2>{% tr "Welcome" %}, {{ request.user.username }}</h2><p>{% tr "Track your income and expenses in one place." %}</p></div>
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
+      <p class="sidebar-label">{% tr "Workspace" %}</p>
+      <nav class="dashboard-nav">
+        <a class="active" href="#dashboard" data-view="dashboard"><span class="nav-icon">⌂</span>{% tr "Dashboard" %}</a>
+        <a href="#transactions" data-view="transactions"><span class="nav-icon">↕</span>{% tr "Transactions" %}</a>
+        <a href="#monthly-budgets" data-view="monthly-budgets"><span class="nav-icon">▤</span>{% tr "Monthly budgets" %}</a>
+        <a href="#savings-goals" data-view="savings-goals"><span class="nav-icon">◎</span>{% tr "Savings goals" %}</a>
+        <a href="#saving-challenges" data-view="saving-challenges"><span class="nav-icon">✦</span>{% tr "Saving challenges" %}</a>
+        <a href="#student-offers" data-view="student-offers"><span class="nav-icon">◇</span>{% tr "Student offers" %}</a>
+        <a href="#financial-tips" data-view="financial-tips"><span class="nav-icon">☼</span>{% tr "Financial tips" %}</a>
+        <a href="#monthly-report" data-view="monthly-report"><span class="nav-icon">▥</span>{% tr "Monthly report" %}</a>
+        <a href="#my-profile" data-view="my-profile"><span class="nav-icon">♙</span>{% tr "My profile" %}</a>
+      </nav>
+    </aside>
+    <main>
     {% if messages %}<ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+    <section id="dashboard" class="dashboard-view">
+    <div class="welcome"><div><h2>{% tr "Welcome" %}, {{ request.user.username }}</h2><p>{% tr "Track your income and expenses in one place." %}</p></div><a class="welcome-action" href="#transaction-form"><span aria-hidden="true">＋</span>{% tr "Add a transaction" %}</a></div>
     <section class="cards">
-      <div class="card"><span>{% tr "Total income" %}</span><strong>{{ income_total|floatformat:2 }}</strong></div>
-      <div class="card"><span>{% tr "Total expenses" %}</span><strong>{{ expense_total|floatformat:2 }}</strong></div>
-      <div class="card"><span>{% tr "Balance" %}</span><strong>{{ balance|floatformat:2 }}</strong></div>
+      <div class="card"><span><i class="stat-icon" aria-hidden="true">↗</i>{% tr "Total income" %}</span><strong>{{ income_total|floatformat:2 }}</strong></div>
+      <div class="card"><span><i class="stat-icon" aria-hidden="true">↘</i>{% tr "Total expenses" %}</span><strong>{{ expense_total|floatformat:2 }}</strong></div>
+      <div class="card"><span><i class="stat-icon" aria-hidden="true">＝</i>{% tr "Balance" %}</span><strong>{{ balance|floatformat:2 }}</strong></div>
     </section>
     <section class="content">
-      <div class="panel">
-        <h2>{% tr "Add a transaction" %}</h2>
+      <details class="panel transaction-entry" id="transaction-form">
+        <summary>{% tr "Add a transaction" %}<span aria-hidden="true">＋</span></summary>
         <form method="post">
           {% csrf_token %}
           <input type="hidden" name="form_type" value="transaction">
           {{ form.non_field_errors }}
-          {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}{% endfor %}
-          <p><button type="submit">{% tr "Save transaction" %}</button></p>
+          {% for field in form %}<div class="field-group"><label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+          <p class="submit-row"><button type="submit">{% tr "Save transaction" %}</button></p>
         </form>
-      </div>
-      <div class="panel">
+      </details>
+      <div class="panel dashboard-recent">
         <h2>{% tr "Recent transactions" %}</h2>
-        <form method="get" class="transaction-filter">
-          <input type="hidden" name="month" value="{{ report_month|date:'Y-m' }}">
-          <input type="search" name="q" value="{{ search_query }}" placeholder="{% tr 'Search category or note' %}">
-          <input type="month" name="transaction_month" value="{{ selected_transaction_month }}" aria-label="{% tr 'Filter by month' %}">
-          <select name="type" aria-label="{% tr 'Filter by transaction type' %}">
-            <option value="">{% tr "All types" %}</option>
-            {% for value, label in transaction_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label|translate:site_language }}</option>{% endfor %}
-          </select>
-          <button type="submit">{% tr "Filter" %}</button>
-          <a href="{% url 'home' %}">{% tr "Clear" %}</a>
-        </form>
-        {% if transactions %}
-          <table><thead><tr><th>{% tr "Date" %}</th><th>{% tr "Type" %}</th><th>{% tr "Category" %}</th><th>{% tr "Amount" %}</th><th>{% tr "Note" %}</th><th>{% tr "Actions" %}</th></tr></thead>
-          <tbody>{% for transaction in transactions %}<tr>
-            <td>{{ transaction.date|date:"M j, Y" }}</td>
-            <td class="{{ transaction.type }}">{{ transaction.get_type_display|translate:site_language }}</td>
-            <td>{{ transaction.category }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
-            <td><a href="{% url 'transaction_edit' transaction.pk %}">{% tr "Edit" %}</a> · <a href="{% url 'transaction_delete' transaction.pk %}">{% tr "Delete" %}</a></td>
-          </tr>{% endfor %}</tbody></table>
-        {% else %}
-          {% if search_query or selected_type or selected_transaction_month %}<p class="empty">{% tr "No transactions match these filters." %} <a href="{% url 'home' %}">{% tr "Clear filters" %}</a></p>
-          {% else %}<p class="empty">{% tr "No transactions yet. Add your first one using the form." %}</p>{% endif %}
-        {% endif %}
+        {% if recent_transactions %}
+          <div class="recent-transaction-list">
+            {% for transaction in recent_transactions %}
+              <div class="recent-transaction">
+                <span class="recent-transaction-icon {% if transaction.type == 'income' %}income{% else %}expense{% endif %}" aria-hidden="true">{% if transaction.type == 'income' %}↗{% else %}↘{% endif %}</span>
+                <span class="recent-transaction-copy"><strong>{{ transaction.category }}</strong><small>{{ transaction.date|date:"M j, Y" }}{% if transaction.note %} · {{ transaction.note }}{% endif %}</small></span>
+                <strong class="{% if transaction.type == 'income' %}income{% else %}expense{% endif %}">{% if transaction.type == 'expense' %}−{% else %}+{% endif %}{{ transaction.amount|floatformat:2 }}</strong>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}<p class="empty">{% tr "No transactions yet. Add your first one using the form." %}</p>{% endif %}
+        <a class="recent-history-link" href="#transactions" data-open-view="transactions">{% tr "View transaction history" %} →</a>
       </div>
     </section>
-    <section class="panel" style="margin-top: 20px">
+    </section>
+    <section class="dashboard-view panel" id="transactions" style="margin-top: 20px">
+      <h2>{% tr "Transaction history" %}</h2>
+      <form method="get" class="transaction-filter">
+        <input type="hidden" name="month" value="{{ report_month|date:'Y-m' }}">
+        <input type="hidden" name="dashboard_view" value="transactions">
+        <input type="search" name="q" value="{{ search_query }}" placeholder="{% tr 'Search category or note' %}">
+        <input type="month" name="transaction_month" value="{{ selected_transaction_month }}" aria-label="{% tr 'Filter by month' %}">
+        <select name="type" aria-label="{% tr 'Filter by transaction type' %}">
+          <option value="">{% tr "All types" %}</option>
+          {% for value, label in transaction_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label|translate:site_language }}</option>{% endfor %}
+        </select>
+        <button type="submit">{% tr "Filter" %}</button>
+        <a href="{% url 'home' %}">{% tr "Clear" %}</a>
+      </form>
+      {% if transactions %}
+        <div class="table-wrap"><table><thead><tr><th>{% tr "Date" %}</th><th>{% tr "Type" %}</th><th>{% tr "Category" %}</th><th>{% tr "Amount" %}</th><th>{% tr "Note" %}</th><th>{% tr "Actions" %}</th></tr></thead>
+        <tbody>{% for transaction in transactions %}<tr>
+          <td>{{ transaction.date|date:"M j, Y" }}</td>
+          <td class="{{ transaction.type }}">{{ transaction.get_type_display|translate:site_language }}</td>
+          <td>{{ transaction.category }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
+          <td><a href="{% url 'transaction_edit' transaction.pk %}">{% tr "Edit" %}</a> · <a href="{% url 'transaction_delete' transaction.pk %}">{% tr "Delete" %}</a></td>
+        </tr>{% endfor %}</tbody></table></div>
+      {% else %}
+        {% if search_query or selected_type or selected_transaction_month %}<p class="empty">{% tr "No transactions match these filters." %} <a href="{% url 'home' %}">{% tr "Clear filters" %}</a></p>
+        {% else %}<p class="empty">{% tr "No transactions yet. Add your first one using the form." %}</p>{% endif %}
+      {% endif %}
+    </section>
+    <section class="dashboard-view panel" id="saving-challenges" style="margin-top: 20px">
       <h2>{% tr "Saving challenges" %}</h2>
       {% if saving_challenges %}
         <div class="challenge-list">
@@ -213,7 +382,7 @@
         </div>
       {% else %}<p class="empty">{% tr "No saving challenges are available right now." %}</p>{% endif %}
     </section>
-    <section class="panel" style="margin-top: 20px">
+    <section class="dashboard-view panel" id="student-offers" style="margin-top: 20px">
       <h2>{% tr "Student discount offers" %}</h2>
       {% if offer_categories %}
         <form method="get" class="offer-filter">
@@ -242,7 +411,7 @@
         <p class="empty">{% tr "No student offers are available right now. An administrator can add offers in the admin panel." %}</p>
       {% endif %}
     </section>
-    <section class="panel" style="margin-top: 20px">
+    <section class="dashboard-view panel" id="financial-tips" style="margin-top: 20px">
       <h2>{% tr "Financial tips" %}</h2>
       {% if financial_tips %}
         <div class="tip-list">
@@ -256,7 +425,7 @@
         </div>
       {% else %}<p class="empty">{% tr "No financial tips are available right now." %}</p>{% endif %}
     </section>
-    <section class="panel" style="margin-top: 20px">
+    <section class="dashboard-view panel" id="savings-goals" style="margin-top: 20px">
       <h2>{% tr "Savings goals" %}</h2>
       <form method="post" style="max-width: 340px; margin-bottom: 24px">
         {% csrf_token %}
@@ -284,7 +453,7 @@
         </div>
       {% else %}<p class="empty">{% tr "No savings goals yet. Create one to track your progress." %}</p>{% endif %}
     </section>
-    <section class="panel" style="margin-top: 20px">
+    <section class="dashboard-view panel" id="monthly-budgets" style="margin-top: 20px">
       <h2>{% tr "Monthly budgets" %} — {{ current_month|date:"F Y" }}</h2>
       <form method="post" style="max-width: 340px; margin-bottom: 20px">
         {% csrf_token %}
@@ -300,7 +469,7 @@
         </tr>{% endfor %}</tbody></table>
       {% else %}<p class="empty">{% tr "No budgets set for this month yet." %}</p>{% endif %}
     </section>
-    <section class="panel" style="margin-top: 20px">
+    <section class="dashboard-view panel" id="monthly-report" style="margin-top: 20px">
       <h2>{% tr "Monthly report" %} — {{ report_month|date:"F Y" }}</h2>
       <form method="get" class="month-filter">
         <label for="report-month">{% tr "Select month" %}
@@ -329,6 +498,89 @@
         </div>
       </div>
     </section>
-  </main>
+    <section class="dashboard-view panel" id="my-profile" style="margin-top: 20px">
+      <h2>{% tr "My profile" %}</h2>
+      <p class="empty">{% tr "Keep your student and account details up to date." %}</p>
+      <div class="profile-current-picture">
+        <span class="student-avatar" aria-hidden="true">{% if profile.profile_picture %}<img src="{{ profile.profile_picture.url }}" alt="">{% else %}{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{% endif %}</span>
+        <span>{{ request.user.get_full_name|default:request.user.username }}{% if profile.university %}<br>{{ profile.university }}{% endif %}</span>
+      </div>
+      <form method="post" enctype="multipart/form-data" class="profile-grid">
+        {% csrf_token %}<input type="hidden" name="form_type" value="profile">
+        {% for field in account_details_form %}<div class="profile-field"><label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+        <div class="profile-field"><label for="{{ profile_form.university.id_for_label }}">{{ profile_form.university.label|translate:site_language }}</label>{{ profile_form.university }}{{ profile_form.university.errors }}</div>
+        <div class="profile-field profile-span">
+          <label>{% tr "Profile picture" %}</label>
+          <div class="profile-photo-controls">
+            <label for="{{ profile_form.profile_picture.id_for_label }}">{% tr "Choose or change photo" %}</label>
+            {{ profile_form.profile_picture }}{{ profile_form.profile_picture.errors }}
+            {% if profile.profile_picture %}<label class="profile-remove-picture">{{ profile_form.remove_profile_picture }}{% tr "Remove current photo" %}</label>{% endif %}
+          </div>
+          {{ profile_form.remove_profile_picture.errors }}
+        </div>
+        <div class="profile-submit"><button type="submit">{% tr "Save profile" %}</button></div>
+      </form>
+      <form method="post" class="profile-password-form">
+        {% csrf_token %}<input type="hidden" name="form_type" value="password_change">
+        <h2>{% tr "Change password" %}</h2>
+        {% for field in password_change_form %}<label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>{{ field }}{{ field.errors }}{% endfor %}
+        <button type="submit">{% tr "Update password" %}</button>
+      </form>
+    </section>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const links = [...document.querySelectorAll(".dashboard-nav a[data-view]")];
+      const views = [...document.querySelectorAll(".dashboard-view")];
+      const showView = (viewId, activeHash, updateHistory = true) => {
+        const selectedView = viewId;
+        if (!views.some((view) => view.id === selectedView)) return;
+        views.forEach((view) => { view.hidden = view.id !== selectedView; });
+        links.forEach((link) => {
+          const active = link.getAttribute("href") === activeHash;
+          link.classList.toggle("active", active);
+          if (active) link.setAttribute("aria-current", "page");
+          else link.removeAttribute("aria-current");
+        });
+        if (updateHistory) history.pushState(null, "", activeHash);
+        if (selectedView === "transactions") {
+          document.getElementById("transactions").scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      };
+      links.forEach((link) => link.addEventListener("click", (event) => {
+        event.preventDefault();
+        showView(link.dataset.view, link.getAttribute("href"));
+      }));
+      document.querySelectorAll("[data-open-view]").forEach((link) => link.addEventListener("click", (event) => {
+        event.preventDefault();
+        showView(link.dataset.openView, link.getAttribute("href"));
+      }));
+      const addTransactionLink = document.querySelector(".welcome-action");
+      addTransactionLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        const transactionPanel = document.getElementById("transaction-form");
+        transactionPanel.open = true;
+        transactionPanel.classList.remove("attention");
+        void transactionPanel.offsetWidth;
+        transactionPanel.classList.add("attention");
+        history.replaceState(null, "", "#dashboard");
+        requestAnimationFrame(() => {
+          transactionPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+          transactionPanel.querySelector("select, input")?.focus({ preventScroll: true });
+        });
+      });
+      window.addEventListener("popstate", () => {
+        const hash = window.location.hash || (new URLSearchParams(window.location.search).get("dashboard_view") === "transactions" ? "#transactions" : "#dashboard");
+        const link = links.find((item) => item.getAttribute("href") === hash) || links[0];
+        showView(link.dataset.view, link.getAttribute("href"), false);
+      });
+      const initialHash = window.location.hash || (new URLSearchParams(window.location.search).get("dashboard_view") === "transactions" ? "#transactions" : "#dashboard");
+      const initialLink = links.find((item) => item.getAttribute("href") === initialHash) || links[0];
+      showView(initialLink.dataset.view, initialLink.getAttribute("href"), false);
+    })();
+  </script>
 </body>
 </html>

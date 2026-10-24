@@ -5,7 +5,6 @@ LANGUAGE_CODES = {
     "en": "en-us",
     "lt": "lt",
     "az": "az",
-    "uk": "uk",
 }
 
 
@@ -17,6 +16,9 @@ class SessionLanguageMiddleware:
 
     def __call__(self, request):
         selected_language = request.session.get("site_language", "en")
+        if selected_language not in LANGUAGE_CODES:
+            selected_language = "en"
+            request.session["site_language"] = selected_language
         language_code = LANGUAGE_CODES.get(selected_language, "en-us")
         translation.activate(language_code)
         response = self.get_response(request)

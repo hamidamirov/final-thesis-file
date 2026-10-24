@@ -3,8 +3,9 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib import messages
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import login as auth_login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -13,10 +14,12 @@ from django.utils import timezone
 from apps.core.ui_text import translate_ui
 
 from .forms import (
+    AccountDetailsForm,
     BudgetForm,
     GoalContributionForm,
     RegistrationForm,
     SavingsGoalForm,
+    StudentProfileForm,
     TransactionForm,
 )
 from .models import (
@@ -24,6 +27,7 @@ from .models import (
     FinancialTip,
     SavingChallenge,
     SavingsGoal,
+    StudentProfile,
     StudentOffer,
     Transaction,
     UserChallenge,
@@ -45,6 +49,30 @@ def signup(request):
 @login_required
 def dashboard(request):
     language = request.session.get("site_language", "en")
+    profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+    profile_form = StudentProfileForm(instance=profile)
+    account_details_form = AccountDetailsForm(instance=request.user)
+    password_change_form = PasswordChangeForm(user=request.user)
+
+    if request.method == "POST" and request.POST.get("form_type") == "profile":
+        profile_form = StudentProfileForm(
+            request.POST, request.FILES, instance=profile
+        )
+        account_details_form = AccountDetailsForm(request.POST, instance=request.user)
+        if profile_form.is_valid() and account_details_form.is_valid():
+            profile_form.save()
+            account_details_form.save()
+            messages.success(request, translate_ui("Profile updated successfully.", language))
+            return redirect("/dashboard/#my-profile")
+
+    if request.method == "POST" and request.POST.get("form_type") == "password_change":
+        password_change_form = PasswordChangeForm(user=request.user, data=request.POST)
+        if password_change_form.is_valid():
+            updated_user = password_change_form.save()
+            update_session_auth_hash(request, updated_user)
+            messages.success(request, translate_ui("Password changed successfully.", language))
+            return redirect("/dashboard/#my-profile")
+
     if request.method == "POST" and request.POST.get("challenge_action") == "start":
         challenge = get_object_or_404(
             SavingChallenge, pk=request.POST.get("challenge_id"), is_active=True
@@ -260,7 +288,12 @@ def dashboard(request):
         "finance/dashboard.html",
         {
             "form": form,
-        "transactions": transaction_list,
+            "transactions": transaction_list,
+            "recent_transactions": user_transactions[:5],
+            "profile": profile,
+            "profile_form": profile_form,
+            "account_details_form": account_details_form,
+            "password_change_form": password_change_form,
             "search_query": search_query,
             "selected_type": selected_type,
             "selected_transaction_month": selected_transaction_month,
