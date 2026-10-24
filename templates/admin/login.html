@@ -1,0 +1,100 @@
+{% load ui %}
+<!doctype html>
+<html lang="{{ site_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% tr "Admin login" %} | {% tr "Student Finance" %}</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color: #172b45; background: #f7faff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    .admin-auth { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(430px, .88fr); }
+    .story-panel { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 42px clamp(24px, 5vw, 72px); color: white; background: radial-gradient(ellipse at 75% 18%, #5267fb 0, transparent 38%), linear-gradient(145deg, #2435a3, #1467bb 58%, #46b9a4); }
+    .story-panel::before, .story-panel::after { position: absolute; content: ""; border-radius: 50%; pointer-events: none; }
+    .story-panel::before { width: 430px; height: 430px; top: -250px; left: -140px; border: 1px solid #ffffff2b; box-shadow: 0 0 0 35px #ffffff08, 0 0 0 75px #ffffff08; }
+    .story-panel::after { width: 420px; height: 130px; bottom: -72px; right: -105px; background: #75dfb733; transform: rotate(-16deg); }
+    .story-copy { position: relative; z-index: 1; width: min(100%, 560px); }
+    .eyebrow { margin: 0 0 14px; color: #d8f8ff; font-size: 13px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .story-copy h1 { margin: 0; font-size: clamp(30px, 3.7vw, 44px); line-height: 1.1; letter-spacing: -1px; }
+    .story-copy > p:last-child { max-width: 520px; margin: 14px 0 0; color: #e5f2ff; font-size: 15px; line-height: 1.6; }
+    .phone { position: relative; z-index: 1; width: 270px; padding: 9px; border: 2px solid #172443; border-radius: 36px; background: #172443; box-shadow: 0 24px 50px #07153866; transform: rotate(-3deg); }
+    .phone-screen { min-height: 360px; padding: 23px 18px 18px; border-radius: 27px; background: linear-gradient(160deg, #f8fbff, #e7f3ff); color: #173b67; }
+    .phone-notch { width: 74px; height: 15px; margin: -23px auto 19px; border-radius: 0 0 12px 12px; background: #172443; }
+    .phone-brand { margin: 0; font-size: 13px; font-weight: 700; }
+    .phone-screen h2 { margin: 17px 0 6px; font-size: 20px; }
+    .phone-lead { margin: 0 0 14px; color: #607792; font-size: 11px; line-height: 1.5; }
+    .tool-row { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 11px 10px; border: 1px solid #e0eaf5; border-radius: 12px; background: white; box-shadow: 0 3px 8px #173b670b; }
+    .tool-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: #e7f2ff; color: #1675d1; font-size: 15px; font-weight: 700; }
+    .tool-row strong { display: block; font-size: 11px; }
+    .tool-row span { display: block; margin-top: 3px; color: #6b7f96; font-size: 9px; }
+    .phone-footer { margin: 13px 0 0; color: #58708c; text-align: center; font-size: 10px; }
+    .login-panel { display: flex; align-items: center; justify-content: center; padding: 40px clamp(24px, 5vw, 72px); background: #f9fbff; }
+    .login-content { width: min(100%, 400px); }
+    .preferences { display: flex; gap: 12px; margin: 0 0 48px; }
+    .preferences label { flex: 1; margin: 0; color: #526982; font-size: 12px; font-weight: 700; }
+    .preferences select { width: 100%; min-height: 40px; margin-top: 6px; padding: 8px; border: 1px solid #ccdaeb; border-radius: 8px; background: white; color: #172b45; }
+    .login-content h2 { margin: 0; color: #173b67; font-size: 30px; letter-spacing: -.5px; }
+    .login-intro { margin: 9px 0 28px; color: #667b93; line-height: 1.5; }
+    .login-form label { display: block; margin: 17px 0 7px; color: #233b56; font-size: 14px; font-weight: 700; }
+    .login-form input:not([type="hidden"]) { width: 100%; min-height: 47px; padding: 11px 13px; border: 1px solid #cbd9ea; border-radius: 9px; background: white; }
+    .login-form input:focus, .preferences select:focus { outline: none; border-color: #3989df; box-shadow: 0 0 0 3px #3989df24; }
+    .errorlist, .errornote { margin: 8px 0; padding-left: 20px; color: #b42318; font-size: 13px; }
+    .primary-button { width: 100%; min-height: 47px; margin-top: 24px; border: 0; border-radius: 9px; background: #1675d1; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: .15s ease; }
+    .primary-button:hover { background: #0f63b6; transform: translateY(-1px); box-shadow: 0 5px 14px #1675d133; }
+    .admin-note { margin: 17px 0 0; color: #71839a; text-align: center; font-size: 12px; }
+    .return-link { display: block; margin-top: 25px; color: #2675bc; text-align: center; font-size: 13px; }
+    body[data-theme="dark"] .login-panel { background: #111827; }
+    body[data-theme="dark"] .login-content h2 { color: #d8ebff; }
+    body[data-theme="dark"] .login-intro, body[data-theme="dark"] .admin-note { color: #b9c9dc; }
+    body[data-theme="dark"] .login-form label, body[data-theme="dark"] .preferences label { color: #d8e5f4; }
+    body[data-theme="dark"] .login-form input:not([type="hidden"]), body[data-theme="dark"] .preferences select { border-color: #52647a; background: #1c2736; color: #e7edf5; }
+    body[data-theme="dark"] .return-link { color: #8fc1ff; }
+    @media (max-width: 850px) { .admin-auth { grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr); } .story-panel { padding: 34px 24px; } .phone { width: 245px; } }
+    @media (max-width: 680px) { .admin-auth { grid-template-columns: 1fr; } .story-panel { padding: 38px 22px 32px; } .story-copy { text-align: center; } .phone { width: 238px; } .phone-screen { min-height: 330px; } .login-panel { padding: 36px 22px 45px; } .preferences { margin-bottom: 34px; } }
+  </style>
+</head>
+<body data-theme="{{ site_theme }}">
+  <div class="admin-auth">
+    <section class="story-panel" aria-label="{% tr 'Admin tools' %}">
+      <div class="story-copy">
+        <p class="eyebrow">{% tr "Admin tools" %}</p>
+        <h1>{% tr "Manage the Student Finance platform." %}</h1>
+        <p>{% tr "Review accounts and manage the student resources shown on the website." %}</p>
+      </div>
+      <div class="phone" aria-label="{% tr 'Student Finance admin tools preview' %}">
+        <div class="phone-screen">
+          <div class="phone-notch"></div>
+          <p class="phone-brand">{% tr "Student Finance" %}</p>
+          <h2>{% tr "Platform overview" %}</h2>
+          <p class="phone-lead">{% tr "Manage useful content for students." %}</p>
+          <div class="tool-row"><span class="tool-icon">♙</span><div><strong>{% tr "User accounts" %}</strong><span>{% tr "Review registered users" %}</span></div></div>
+          <div class="tool-row"><span class="tool-icon">✦</span><div><strong>{% tr "Financial tips" %}</strong><span>{% tr "Share helpful guidance" %}</span></div></div>
+          <div class="tool-row"><span class="tool-icon">％</span><div><strong>{% tr "Student offers" %}</strong><span>{% tr "Manage student discounts" %}</span></div></div>
+          <p class="phone-footer">{% tr "Authorized administrators only" %}</p>
+        </div>
+      </div>
+    </section>
+    <section class="login-panel">
+      <div class="login-content">
+        {% include "includes/preferences.html" %}
+        <h2>{% tr "Admin login" %}</h2>
+        <p class="login-intro">{% tr "Sign in with your administrator account." %}</p>
+        {% if form.errors and not form.non_field_errors %}<p class="errornote">{% tr "Please check your username and password." %}</p>{% endif %}
+        {% if form.non_field_errors %}{% for error in form.non_field_errors %}<p class="errornote">{{ error }}</p>{% endfor %}{% endif %}
+        {% if user.is_authenticated %}<p class="errornote">{% tr "You are signed in as" %} {{ username }}. {% tr "This account cannot access the admin panel." %}</p>{% endif %}
+        <form action="{{ app_path }}" method="post" class="login-form">{% csrf_token %}
+          {{ form.username.errors }}
+          <label for="id_username">{% tr "Username" %}</label>{{ form.username }}
+          {{ form.password.errors }}
+          <label for="id_password">{% tr "Password" %}</label>{{ form.password }}
+          <input type="hidden" name="next" value="{{ next }}">
+          <button class="primary-button" type="submit">{% tr "Log in" %}</button>
+        </form>
+        <p class="admin-note">{% tr "Authorized administrators only" %}</p>
+        <a class="return-link" href="{% url 'login' %}">{% tr "Return to student login" %}</a>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

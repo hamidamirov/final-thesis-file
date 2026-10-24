@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from apps.core.views import database_health, save_preferences
+from apps.core.views import database_health, home, save_preferences
 from apps.finance.views import (
     dashboard,
     monthly_report_csv,
@@ -16,10 +16,11 @@ urlpatterns = [
     path("accounts/login/", auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
     path("accounts/signup/", signup, name="signup"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("dashboard/", dashboard, name="dashboard"),
     path("transactions/<int:pk>/edit/", transaction_edit, name="transaction_edit"),
     path("transactions/<int:pk>/delete/", transaction_delete, name="transaction_delete"),
     path("reports/monthly.csv", monthly_report_csv, name="monthly_report_csv"),
-    path("", dashboard, name="home"),
+    path("", home, name="home"),
     path("health/database/", database_health, name="database_health"),
     path("preferences/", save_preferences, name="save_preferences"),
 ]

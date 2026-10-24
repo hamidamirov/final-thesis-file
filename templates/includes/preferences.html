@@ -1,15 +1,34 @@
 {% load ui %}
-<form method="post" action="{% url 'save_preferences' %}" class="preferences">
-  {% csrf_token %}
-  <input type="hidden" name="next" value="{{ request.get_full_path }}">
-  <label>{% tr "Language" %}
-    <select name="language" onchange="this.form.requestSubmit()">
-      {% for code, label in language_options %}<option value="{{ code }}" {% if site_language == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
-    </select>
-  </label>
-  <label>{% tr "Theme" %}
-    <select name="theme" onchange="this.form.requestSubmit()">
-      {% for code, label in theme_options %}<option value="{{ code }}" {% if site_theme == code %}selected{% endif %}>{{ label|translate:site_language }}</option>{% endfor %}
-    </select>
-  </label>
-</form>
+<style>
+  .compact-preferences { display: inline-flex; align-items: center; gap: 8px; }
+  .language-picker { position: relative; }
+  .language-picker > summary, .theme-toggle button { display: grid; width: 38px; height: 38px; place-items: center; padding: 0; border: 1px solid #cbd9e6; border-radius: 50%; color: #315a7c; background: #edf3f8; font: 20px/1 Arial, sans-serif; cursor: pointer; list-style: none; }
+  .language-picker > summary::-webkit-details-marker { display: none; }
+  .language-picker > summary:hover, .theme-toggle button:hover { background: #dce8f2; }
+  .language-picker-panel { position: absolute; z-index: 20; top: calc(100% + 10px); right: 0; width: 190px; padding: 13px; border: 1px solid #d7e1eb; border-radius: 10px; background: #fff; color: #26384d; box-shadow: 0 10px 28px #132b4329; }
+  .language-picker-panel label { display: block; margin: 0 0 6px; color: #526982; font-size: 12px; font-weight: 700; }
+  .language-picker-panel select { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid #cbd9ea; border-radius: 7px; background: white; color: #172b45; font: inherit; }
+  .theme-toggle { margin: 0; }
+  @media (prefers-reduced-motion: no-preference) { .language-picker-panel { animation: picker-in .14s ease-out; } @keyframes picker-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } } }
+</style>
+<div class="compact-preferences">
+  <details class="language-picker">
+    <summary title="{% tr 'Change language' %}" aria-label="{% tr 'Change language' %}">🌐</summary>
+    <div class="language-picker-panel">
+      <form method="post" action="{% url 'save_preferences' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <label for="site-language">{% tr "Language" %}</label>
+        <select id="site-language" name="language" onchange="this.form.requestSubmit()">
+          {% for code, label in language_options %}<option value="{{ code }}" {% if site_language == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </form>
+    </div>
+  </details>
+  <form method="post" action="{% url 'save_preferences' %}" class="theme-toggle">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <input type="hidden" name="language" value="{{ site_language }}">
+    <button type="submit" name="theme" value="{% if site_theme == 'dark' %}light{% else %}dark{% endif %}" title="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}" aria-label="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}">{% if site_theme == "dark" %}☀️{% else %}🌙{% endif %}</button>
+  </form>
+</div>

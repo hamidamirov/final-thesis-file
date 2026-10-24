@@ -12,6 +12,7 @@
     header { background: #173b67; color: white; padding: 18px max(24px, calc((100% - 1100px) / 2)); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
     header h1 { font-size: 20px; margin: 0; }
     header form { margin: 0; }
+    .admin-link { display: inline-block; padding: 9px 12px; border: 1px solid #b8cee8; border-radius: 7px; color: white; text-decoration: none; font-weight: 700; }
     button { border: 0; border-radius: 7px; padding: 11px 16px; background: #1675d1; color: white; font-weight: 700; cursor: pointer; }
     .button-link { display: inline-block; border-radius: 7px; padding: 11px 16px; background: #e9f1fb; color: #173b67; font-weight: 700; text-decoration: none; }
     header button { background: transparent; border: 1px solid #b8cee8; }
@@ -84,13 +85,54 @@
     body[data-theme="dark"] .card span, body[data-theme="dark"] .empty, body[data-theme="dark"] .tip-category, body[data-theme="dark"] .offer-provider, body[data-theme="dark"] .challenge-duration { color: #a9bacf; }
     body[data-theme="dark"] a { color: #8fc1ff; }
     @media (max-width: 760px) { .preferences { flex-wrap: wrap; } }
+
+    /* Refined light-blue dashboard styling. */
+    :root { background: #eef4fc; }
+    header { min-height: 72px; background: linear-gradient(110deg, #12345a, #1d568c); box-shadow: 0 3px 14px #173b6724; }
+    header h1 { letter-spacing: .2px; }
+    main { max-width: 1180px; margin-top: 28px; }
+    .welcome { padding: 24px 28px; margin-bottom: 20px; border: 1px solid #d6e6f8; border-radius: 16px; background: linear-gradient(110deg, #e3f1ff, #f8fbff 72%); }
+    .welcome h2 { margin-bottom: 6px; font-size: 23px; }
+    .welcome p { margin: 0; color: #536b87; }
+    .cards { gap: 18px; }
+    .card, .panel { border-color: #dce7f4; border-radius: 15px; box-shadow: 0 7px 22px #244a7210; }
+    .card { position: relative; overflow: hidden; padding: 22px 23px; }
+    .card::before { position: absolute; inset: 0 auto 0 0; width: 4px; content: ""; background: #3989df; }
+    .card:nth-child(2)::before { background: #e06a6a; }
+    .card:nth-child(3)::before { background: #35a878; }
+    .card strong { font-size: 28px; letter-spacing: -.4px; }
+    .panel { padding: 22px; }
+    .panel h2 { padding-bottom: 12px; border-bottom: 1px solid #e6edf6; }
+    input, select { min-height: 42px; border-color: #c9d8ea; transition: border-color .15s, box-shadow .15s; }
+    input:focus, select:focus { outline: none; border-color: #3989df; box-shadow: 0 0 0 3px #3989df24; }
+    button, .button-link { transition: background-color .15s, transform .15s, box-shadow .15s; }
+    button:hover, .button-link:hover { transform: translateY(-1px); box-shadow: 0 4px 10px #1675d133; }
+    table { overflow: hidden; }
+    th { letter-spacing: .45px; }
+    tbody tr:hover { background: #f5f9fe; }
+    .goal-item, .challenge-item, .offer-item, .tip-item { border-radius: 12px; }
+    body[data-theme="dark"] .welcome { background: linear-gradient(110deg, #1b3655, #1c2736 72%); border-color: #344b66; }
+    body[data-theme="dark"] .welcome p { color: #b9c9dc; }
+    body[data-theme="dark"] .panel h2 { border-color: #344357; }
+    body[data-theme="dark"] tbody tr:hover { background: #253347; }
+    @media (max-width: 760px) {
+      main { margin-top: 18px; padding: 0 14px; }
+      .welcome { padding: 20px; }
+      .card, .panel { padding: 18px; }
+      .cards { gap: 12px; }
+      .panel { overflow-x: auto; }
+      table { min-width: 560px; }
+    }
   </style>
 </head>
 <body data-theme="{{ site_theme }}">
   <header>
     <h1>{% tr "Student Finance" %}</h1>
     {% include "includes/preferences.html" %}
-    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% tr "Log out" %}</button></form>
+    <div style="display:flex;align-items:center;gap:10px">
+      {% if request.user.is_staff %}<a class="admin-link" href="{% url 'admin:index' %}">{% tr "Admin panel" %}</a>{% endif %}
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">{% tr "Log out" %}</button></form>
+    </div>
   </header>
   <main>
     <div class="welcome"><h2>{% tr "Welcome" %}, {{ request.user.username }}</h2><p>{% tr "Track your income and expenses in one place." %}</p></div>
