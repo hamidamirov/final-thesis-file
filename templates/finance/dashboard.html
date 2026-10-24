@@ -312,7 +312,7 @@
             {% for transaction in recent_transactions %}
               <div class="recent-transaction">
                 <span class="recent-transaction-icon {% if transaction.type == 'income' %}income{% else %}expense{% endif %}" aria-hidden="true">{% if transaction.type == 'income' %}↗{% else %}↘{% endif %}</span>
-                <span class="recent-transaction-copy"><strong>{{ transaction.category }}</strong><small>{{ transaction.date|date:"M j, Y" }}{% if transaction.note %} · {{ transaction.note }}{% endif %}</small></span>
+                <span class="recent-transaction-copy"><strong>{{ transaction.category|translate:site_language }}</strong><small>{{ transaction.date|date:"M j, Y" }}{% if transaction.note %} · {{ transaction.note }}{% endif %}</small></span>
                 <strong class="{% if transaction.type == 'income' %}income{% else %}expense{% endif %}">{% if transaction.type == 'expense' %}−{% else %}+{% endif %}{{ transaction.amount|floatformat:2 }}</strong>
               </div>
             {% endfor %}
@@ -341,7 +341,7 @@
         <tbody>{% for transaction in transactions %}<tr>
           <td>{{ transaction.date|date:"M j, Y" }}</td>
           <td class="{{ transaction.type }}">{{ transaction.get_type_display|translate:site_language }}</td>
-          <td>{{ transaction.category }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
+          <td>{{ transaction.category|translate:site_language }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
           <td><a href="{% url 'transaction_edit' transaction.pk %}">{% tr "Edit" %}</a> · <a href="{% url 'transaction_delete' transaction.pk %}">{% tr "Delete" %}</a></td>
         </tr>{% endfor %}</tbody></table></div>
       {% else %}
@@ -355,9 +355,9 @@
         <div class="challenge-list">
           {% for challenge in saving_challenges %}
             <article class="challenge-item">
-              <h3>{{ challenge.title }}</h3>
+              <h3>{{ challenge.title|translate:site_language }}</h3>
               <p class="challenge-duration">{{ challenge.duration_days }} {% tr "days" %}</p>
-              <p>{{ challenge.description|linebreaksbr }}</p>
+              <p>{{ challenge.description|translate:site_language|linebreaksbr }}</p>
               {% if challenge.user_entry %}
                 {% if challenge.user_entry.completed_at %}
                   <strong class="income">{% tr "Completed" %}</strong>
@@ -389,7 +389,7 @@
           <label for="offer-category">{% tr "Filter by category" %}
             <select id="offer-category" name="offer_category">
               <option value="">{% tr "All categories" %}</option>
-              {% for category in offer_categories %}<option value="{{ category }}" {% if selected_offer_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}
+              {% for category in offer_categories %}<option value="{{ category }}" {% if selected_offer_category == category %}selected{% endif %}>{{ category|translate:site_language }}</option>{% endfor %}
             </select>
           </label>
           <button type="submit">{% tr "Filter" %}</button>
@@ -398,9 +398,9 @@
         <div class="offer-list">
           {% for offer in student_offers %}
             <article class="offer-item">
-              <div class="offer-provider">{{ offer.provider }} · {{ offer.category }}</div>
-              <h3>{{ offer.title }}</h3>
-              <p>{{ offer.description|linebreaksbr }}</p>
+              <div class="offer-provider">{{ offer.provider|translate:site_language }} · {{ offer.category|translate:site_language }}</div>
+              <h3>{{ offer.title|translate:site_language }}</h3>
+              <p>{{ offer.description|translate:site_language|linebreaksbr }}</p>
               {% if offer.discount_code %}<div>{% tr "Discount code:" %} <span class="offer-code">{{ offer.discount_code }}</span></div>{% endif %}
               {% if offer.valid_until %}<p class="offer-provider">{% tr "Valid until" %} {{ offer.valid_until|date:"M j, Y" }}</p>{% endif %}
               {% if offer.offer_url %}<p><a href="{{ offer.offer_url }}" target="_blank" rel="noopener noreferrer">{% tr "View offer" %}</a></p>{% endif %}
@@ -417,9 +417,9 @@
         <div class="tip-list">
           {% for tip in financial_tips %}
             <article class="tip-item">
-              {% if tip.category %}<div class="tip-category">{{ tip.category }}</div>{% endif %}
-              <h3>{{ tip.title }}</h3>
-              <p>{{ tip.content|linebreaksbr }}</p>
+              {% if tip.category %}<div class="tip-category">{{ tip.category|translate:site_language }}</div>{% endif %}
+              <h3>{{ tip.title|translate:site_language }}</h3>
+              <p>{{ tip.content|translate:site_language|linebreaksbr }}</p>
             </article>
           {% endfor %}
         </div>
@@ -464,7 +464,7 @@
       {% if budgets %}
         <table><thead><tr><th>{% tr "Category" %}</th><th>{% tr "Budget" %}</th><th>{% tr "Spent" %}</th><th>{% tr "Remaining" %}</th></tr></thead>
         <tbody>{% for budget in budgets %}<tr>
-          <td>{{ budget.category }}</td><td>{{ budget.amount|floatformat:2 }}</td>
+          <td>{{ budget.category|translate:site_language }}</td><td>{{ budget.amount|floatformat:2 }}</td>
           <td>{{ budget.spent|floatformat:2 }}</td><td>{{ budget.remaining|floatformat:2 }}</td>
         </tr>{% endfor %}</tbody></table>
       {% else %}<p class="empty">{% tr "No budgets set for this month yet." %}</p>{% endif %}
