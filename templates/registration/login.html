@@ -117,11 +117,19 @@
     body[data-theme="dark"] .password-toggle { color: #a9bacf; }
     body[data-theme="dark"] .password-toggle:hover { color: #8fc1ff; background: #253347; }
     body[data-theme="dark"] .forgot-password { color: #8fc1ff; }
+    body[data-theme="dark"] { color: #e7edf5; background: #111827; }
+    body[data-theme="dark"] .auth-layout, body[data-theme="dark"] .form-panel { background: #111827; }
+    body[data-theme="dark"] .auth-register { color: #b9c9dc; }
+    body[data-theme="dark"] .auth-register a { color: #8fc1ff; }
+    body[data-theme="dark"] .auth-topbar .header-language-switch { border-color: #52647a; background: #1c2736; }
+    body[data-theme="dark"] .auth-topbar .header-language-switch button { color: #c1d1e3; }
+    body[data-theme="dark"] .auth-topbar .header-language-switch button[aria-current="true"] { border-color: #8fc1ff; color: #8fc1ff; background: #253347; }
+    body[data-theme="dark"] .story-panel { background: radial-gradient(ellipse at 75% 18%, #263b91 0, transparent 40%), linear-gradient(145deg, #111d49, #123b68 58%, #155750); }
     @media (max-width: 850px) { .auth-layout { grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr); } .story-panel { padding: 36px 25px; } .form-panel { padding-right: 28px; padding-left: 28px; } }
     @media (max-width: 680px) { .auth-layout { grid-template-columns: 1fr; } .form-panel { grid-column: 1; grid-row: 1; min-height: 100vh; padding: 18px 22px 38px; } .form-content { min-height: calc(100vh - 56px); } .auth-topbar { margin-bottom: 24px; padding-bottom: 16px; } .auth-register { font-size: 11px; } .auth-topbar .header-preferences { gap: 6px; } .auth-topbar .header-language-switch button { min-width: 29px; padding: 6px 5px; } .story-panel { grid-column: 1; grid-row: 2; min-height: auto; padding: 48px 24px; } .story-copy { text-align: center; } .mini-app { grid-template-columns: 82px minmax(0, 1fr); } .mini-nav { padding: 12px 6px; } .mini-content { padding: 10px; } }
   </style>
 </head>
-<body data-theme="light">
+<body data-theme="{{ site_theme }}">
   <div class="auth-layout">
     <section class="story-panel" aria-label="{% tr 'Personal finance for student life' %}">
       <div class="story-carousel" aria-label="{% tr 'Website overview slides' %}">
