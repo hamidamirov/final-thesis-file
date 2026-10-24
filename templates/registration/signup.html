@@ -6,44 +6,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% tr "Create an account" %} | {% tr "Student Finance" %}</title>
   <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 0; background: radial-gradient(ellipse at 15% 10%, #dceeff 0, transparent 38%), #eef4fc; color: #172b45; font-family: Arial, sans-serif; }
-    main { position: relative; overflow: hidden; width: min(460px, calc(100% - 32px)); padding: 32px; background: white; border: 1px solid #dce7f4; border-radius: 18px; box-shadow: 0 18px 50px #173b6718; }
-    main::before { position: absolute; inset: 0 0 auto; height: 5px; content: ""; background: linear-gradient(90deg, #173b67, #48a2ee); }
-    h1 { margin: 0; color: #173b67; font-size: 27px; letter-spacing: -.4px; } main > p { color: #62758d; line-height: 1.5; }
-    label { display: block; margin: 18px 0 7px; font-size: 14px; font-weight: 700; }
-    input { width: 100%; box-sizing: border-box; min-height: 44px; padding: 11px 12px; border: 1px solid #cbd9ea; border-radius: 8px; background: #fbfdff; }
-    input:focus, select:focus { outline: none; border-color: #3989df; box-shadow: 0 0 0 3px #3989df24; }
-    button { margin-top: 20px; width: 100%; padding: 13px; border: 0; border-radius: 8px; background: #1675d1; color: white; font-weight: 700; cursor: pointer; transition: background .15s, transform .15s; }
-    button:hover { background: #0f63b6; transform: translateY(-1px); }
-    .errorlist, .helptext { color: #66758b; font-size: 13px; }
-    .preferences { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px solid #e8eef6; }
-    .preferences label { flex: 1; margin: 0; font-size: 12px; }
-    .preferences select { width: 100%; padding: 8px; }
-    .preferences button { width: auto; margin: 0; padding: 9px 12px; }
-    body[data-theme="dark"] { background: radial-gradient(ellipse at 15% 10%, #1b3655 0, transparent 38%), #111827; color: #e7edf5; }
-    body[data-theme="dark"] main { background: #1c2736; border-color: #344357; }
-    body[data-theme="dark"] input, body[data-theme="dark"] select { background: #111827; color: #e7edf5; border-color: #52647a; }
-    body[data-theme="dark"] a { color: #8fc1ff; }
-    body[data-theme="dark"] h1 { color: #d8ebff; }
-    body[data-theme="dark"] main > p { color: #b9c9dc; }
-    body[data-theme="dark"] .preferences { border-color: #344357; }
-    @media (max-width: 480px) { main { padding: 26px 22px; } }
+    :root { font-family: Arial, sans-serif; color: #172b45; background: #f9fbff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    .auth-layout { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(430px, .92fr); }
+    .form-panel { grid-column: 1; grid-row: 1; display: flex; padding: 26px clamp(30px, 4vw, 64px); background: #f9fbff; }
+    .story-panel { grid-column: 2; grid-row: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 54px clamp(26px, 4vw, 64px); color: #fff; background: radial-gradient(ellipse at 75% 18%, #5267fb 0, transparent 38%), linear-gradient(145deg, #2435a3, #1467bb 58%, #46b9a4); }
+    .story-panel::before, .story-panel::after { position: absolute; content: ""; border-radius: 50%; pointer-events: none; }
+    .story-panel::before { width: 430px; height: 430px; top: -250px; left: -140px; border: 1px solid #ffffff2b; box-shadow: 0 0 0 35px #ffffff08, 0 0 0 75px #ffffff08; }
+    .story-panel::after { width: 420px; height: 130px; bottom: -72px; right: -105px; background: #75dfb733; transform: rotate(-16deg); }
+    .form-content { display: flex; width: 100%; min-height: calc(100vh - 52px); flex-direction: column; }
+    .auth-topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 4px 0 22px; }
+    .auth-register { margin: 0; color: #62758d; font-size: 13px; white-space: nowrap; }
+    .auth-register a { margin-left: 5px; color: #2675bc; font-weight: 700; text-decoration: none; }
+    .auth-register a:hover { text-decoration: underline; }
+    .auth-topbar .header-preferences { display: inline-flex; align-items: center; }
+    .auth-topbar .header-language-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #d4dfeb; border-radius: 999px; background: #fff; }
+    .auth-topbar .header-language-switch form { margin: 0; }
+    .auth-topbar .header-language-switch button { min-width: 35px; padding: 6px 8px; border: 0; border-radius: 999px; color: #48627d; background: transparent; font: 700 11px Arial, sans-serif; cursor: pointer; }
+    .auth-topbar .header-language-switch button[aria-current="true"] { border: 1px solid #1675d1; color: #1675d1; background: #f2f8ff; }
+    .auth-center { width: min(100%, 460px); margin: auto; padding: 8px 0 28px; }
+    h1 { margin: 0; color: #173b67; font-size: 30px; letter-spacing: -.5px; }
+    .form-intro { margin: 9px 0 22px; color: #667b93; line-height: 1.5; }
+    .signup-form label { display: block; margin: 14px 0 6px; color: #233b56; font-size: 14px; font-weight: 700; }
+    .signup-form input { width: 100%; min-height: 45px; padding: 11px 13px; border: 1px solid #cbd9ea; border-radius: 9px; background: #fff; }
+    .signup-form input:focus { outline: none; border-color: #3989df; box-shadow: 0 0 0 3px #3989df24; }
+    .signup-form ul { margin: 6px 0 0; padding-left: 18px; color: #66758b; font-size: 12px; line-height: 1.4; }
+    .signup-form .errorlist { color: #b42318; }
+    .signup-form .helptext { display: block; margin-top: 5px; color: #66758b; font-size: 12px; line-height: 1.4; }
+    .signup-submit { width: 100%; min-height: 47px; margin-top: 20px; border: 0; border-radius: 9px; color: #fff; background: #1675d1; font-size: 14px; font-weight: 700; cursor: pointer; transition: .15s ease; }
+    .signup-submit:hover { background: #0f63b6; transform: translateY(-1px); box-shadow: 0 5px 14px #1675d133; }
+    .auth-bottom-link { margin: 17px 0 0; color: #62758d; font-size: 13px; }
+    .auth-bottom-link a { color: #2675bc; font-weight: 700; text-decoration: none; }
+    .story-carousel { position: relative; z-index: 1; width: min(100%, 590px); overflow: hidden; }
+    .story-track { display: flex; width: 100%; transition: transform .5s cubic-bezier(.2,.75,.25,1); }
+    .story-slide { min-width: 100%; padding: 5px 8px 13px; color: #fff; text-align: center; }
+    .story-slide .eyebrow { margin: 0 0 12px; color: #d8f8ff; font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+    .story-slide h2 { max-width: 540px; margin: 0 auto 9px; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.12; letter-spacing: -.8px; }
+    .story-slide > p { min-height: 43px; margin: 0 auto 17px; color: #e5f2ff; font-size: 14px; line-height: 1.55; }
+    .mini-browser { overflow: hidden; border: 1px solid #ffffff75; border-radius: 13px; color: #29435d; background: #f8fbff; box-shadow: 0 15px 32px #0b286844; transform: perspective(900px) rotateY(-2deg); text-align: left; }
+    .mini-browser-bar { height: 31px; display: flex; align-items: center; gap: 5px; padding: 0 11px; border-bottom: 1px solid #e2eaf2; background: #eef3f8; }
+    .mini-browser-bar i { width: 7px; height: 7px; border-radius: 50%; background: #e9a29b; }
+    .mini-browser-bar i:nth-child(2) { background: #e8c879; }
+    .mini-browser-bar i:nth-child(3) { background: #8fc9a7; }
+    .mini-browser-bar span { flex: 1; margin-left: 6px; padding: 4px 8px; border: 1px solid #e0e7ef; border-radius: 5px; color: #8493a5; background: #fff; font-size: 8px; }
+    .mini-app { min-height: 184px; display: grid; grid-template-columns: 96px 1fr; }
+    .mini-nav { padding: 14px 9px; color: #eaf3fa; background: #294762; }
+    .mini-nav strong { display: block; margin: 0 3px 13px; font-size: 9px; }
+    .mini-nav span { display: block; margin-top: 5px; padding: 6px 5px; border-radius: 4px; color: #d0e0ec; font-size: 8px; }
+    .mini-nav span:first-of-type { color: #244461; background: #fff; }
+    .mini-content { padding: 13px; }
+    .mini-content h3 { margin: 0 0 10px; color: #294762; font-size: 13px; }
+    .mini-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 9px; }
+    .mini-summary span { min-height: 38px; padding: 8px 6px; border: 1px solid #e2eaf2; border-radius: 6px; color: #56718c; background: #fff; font-size: 8px; }
+    .mini-summary b { display: block; margin-top: 4px; color: #294762; font-size: 10px; }
+    .mini-data { padding: 8px; border: 1px solid #e2eaf2; border-radius: 7px; background: #fff; }
+    .mini-data p { display: flex; justify-content: space-between; gap: 10px; margin: 0; padding: 6px 2px; border-bottom: 1px solid #edf1f5; color: #60758b; font-size: 8px; }
+    .mini-data p:last-child { border-bottom: 0; }
+    .mini-progress { height: 6px; margin: 4px 0 7px; overflow: hidden; border-radius: 9px; background: #e7edf3; }
+    .mini-progress span { display: block; height: 100%; border-radius: inherit; background: #69ad95; }
+    .carousel-dots { display: flex; justify-content: center; gap: 9px; margin-top: 17px; }
+    .carousel-dots button { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: #ffffff70; cursor: pointer; transition: transform .2s ease, background .2s ease; }
+    .carousel-dots button[aria-current="true"] { background: #fff; transform: scale(1.25); }
+    .carousel-dots button:focus-visible { outline: 2px solid white; outline-offset: 4px; }
+    @media (max-width: 850px) { .auth-layout { grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr); } .form-panel { padding-right: 28px; padding-left: 28px; } .story-panel { padding: 38px 25px; } }
+    @media (max-width: 680px) { .auth-layout { grid-template-columns: 1fr; } .form-panel { grid-column: 1; grid-row: 1; min-height: 100vh; padding: 18px 22px; } .form-content { min-height: calc(100vh - 36px); } .auth-topbar { align-items: flex-start; } .auth-register { font-size: 11px; } .auth-topbar .header-language-switch button { min-width: 29px; padding: 6px 5px; } .story-panel { grid-column: 1; grid-row: 2; min-height: 650px; padding: 44px 20px; } .mini-app { grid-template-columns: 82px minmax(0, 1fr); } .mini-nav { padding: 12px 6px; } .mini-content { padding: 10px; } }
   </style>
 </head>
-<body data-theme="{{ site_theme }}"><main>
-  {% include "includes/preferences.html" %}
-  <h1>{% tr "Create your account" %}</h1>
-  <p>{% tr "Sign up to keep your personal finance records." %}</p>
-  <form method="post">{% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-      <label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>
-      {{ field }}
-      {{ field.errors }}
-      {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
-    {% endfor %}
-    <button type="submit">{% tr "Create an account" %}</button>
-  </form>
-  <p>{% tr "Already have an account?" %} <a href="{% url 'login' %}">{% tr "Log in" %}</a></p>
-</main></body>
+<body data-theme="light">
+  <div class="auth-layout">
+    <section class="form-panel">
+      <div class="form-content">
+        <div class="auth-topbar">
+          <p class="auth-register">{% tr "Already have an account?" %}<a href="{% url 'login' %}">{% tr "Sign in" %}</a></p>
+          {% include "includes/preferences.html" with header_mode=True language_only=True %}
+        </div>
+        <main class="auth-center">
+          <h1>{% tr "Create your account" %}</h1>
+          <p class="form-intro">{% tr "Sign up to keep your personal finance records." %}</p>
+          <form method="post" class="signup-form">{% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+              <label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>
+              {{ field }}
+              {{ field.errors }}
+              {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+            {% endfor %}
+            <button class="signup-submit" type="submit">{% tr "Register" %}</button>
+          </form>
+        </main>
+      </div>
+    </section>
+    <section class="story-panel" aria-label="{% tr 'Personal finance for student life' %}">
+      <div class="story-carousel" aria-label="{% tr 'Website overview slides' %}">
+        <div class="story-track" id="story-track" aria-live="polite">
+          <article class="story-slide" aria-label="1 of 3">
+            <p class="eyebrow">{% tr "Personal finance for student life" %}</p>
+            <h2>Personal Finance Management System for Students</h2>
+            <p>The website helps university students manage personal finances more effectively and understand where their money goes.</p>
+            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/dashboard</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Your finances in one place" %}</h3><div class="mini-summary"><span>{% tr "Income" %}<b>••••</b></span><span>{% tr "Expenses" %}<b>••••</b></span><span>{% tr "Balance" %}<b>••••</b></span></div><div class="mini-data"><p><span>{% tr "Recent transactions" %}</span><b>{% tr "View all" %} →</b></p><p><span>{% tr "Monthly budget" %}</span><b>{% tr "On track" %}</b></p></div></div></div></div>
+          </article>
+          <article class="story-slide" aria-label="2 of 3">
+            <p class="eyebrow">{% tr "Plan with clarity" %}</p>
+            <h2>{% tr "Track transactions and monthly budgets" %}</h2>
+            <p>{% tr "Record income and expenses and review them in one place." %} {% tr "Set category limits and see how much you have spent." %}</p>
+            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/budget</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Monthly budget" %}</h3><div class="mini-summary"><span>{% tr "Food" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Transport" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Books" %}<b>{% tr "Planned" %}</b></span></div><div class="mini-data"><p><span>{% tr "Food and essentials" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:62%"></span></div><p><span>{% tr "Transport" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:38%"></span></div></div></div></div></div>
+          </article>
+          <article class="story-slide" aria-label="3 of 3">
+            <p class="eyebrow">{% tr "Small steps, steady progress" %}</p>
+            <h2>{% tr "Save, learn, and find student offers" %}</h2>
+            <p>{% tr "Set a target and follow your savings progress over time." %} {% tr "Explore financial tips, saving challenges, and student discount offers." %}</p>
+            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/student-tools</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Savings goals" %}</span><span>{% tr "Saving challenges" %}</span><span>{% tr "Student offers" %}</span></aside><div class="mini-content"><h3>{% tr "Student tools" %}</h3><div class="mini-data"><p><span>{% tr "Savings goals" %}</span><b>{% tr "Follow your progress over time" %}</b></p><div class="mini-progress"><span style="width:72%"></span></div><p><span>{% tr "Saving challenges" %}</span><b>{% tr "Build a habit" %}</b></p><p><span>{% tr "Student discount offers" %}</span><b>{% tr "Browse offers" %} →</b></p></div></div></div></div>
+          </article>
+        </div>
+        <div class="carousel-dots" role="group" aria-label="{% tr 'Choose a slide' %}">
+          <button type="button" aria-label="Slide 1" aria-current="true" data-slide="0"></button>
+          <button type="button" aria-label="Slide 2" aria-current="false" data-slide="1"></button>
+          <button type="button" aria-label="Slide 3" aria-current="false" data-slide="2"></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    (() => {
+      const track = document.getElementById("story-track");
+      const dots = [...document.querySelectorAll(".carousel-dots button")];
+      let activeSlide = 0;
+      const showSlide = (index) => {
+        activeSlide = (index + dots.length) % dots.length;
+        track.style.transform = `translateX(-${activeSlide * 100}%)`;
+        dots.forEach((dot, dotIndex) => dot.setAttribute("aria-current", String(dotIndex === activeSlide)));
+      };
+      dots.forEach((dot) => dot.addEventListener("click", () => showSlide(Number(dot.dataset.slide))));
+      document.addEventListener("keydown", (event) => {
+        if (!event.target.closest(".story-carousel")) return;
+        if (event.key === "ArrowRight") showSlide(activeSlide + 1);
+        if (event.key === "ArrowLeft") showSlide(activeSlide - 1);
+      });
+    })();
+  </script>
+</body>
 </html>
