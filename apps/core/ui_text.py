@@ -102,6 +102,27 @@ EXTRA_TRANSLATIONS["uk"].update({
     "The website helps university students manage personal finances more effectively and understand where their money goes.": "Сайт допомагає студентам університетів ефективніше керувати особистими фінансами та розуміти, куди витрачаються їхні гроші.",
     "Show password": "Показати пароль", "Hide password": "Приховати пароль", "Slide 1": "Слайд 1", "Slide 2": "Слайд 2", "Slide 3": "Слайд 3", "Dashboard navigation": "Навігація панелі керування", "Student Finance dashboard preview": "Попередній перегляд панелі Student Finance",
 })
+EXTRA_TRANSLATIONS["lt"].update({
+    "Monthly snapshot": "Mėnesio apžvalga", "A quick estimate": "Greitas įvertis", "Live preview": "Peržiūra realiuoju laiku",
+    "Monthly income": "Mėnesio pajamos", "Monthly expenses": "Mėnesio išlaidos", "Estimated money left": "Apskaičiuotas likutis",
+    "A little breathing room this month.": "Šį mėnesį liko šiek tiek laisvų lėšų.", "Expenses are higher than income.": "Išlaidos viršija pajamas.",
+    "Your income is fully allocated.": "Visos pajamos paskirstytos.", "left": "liko", "Left": "Liko", "Over budget": "Viršytas biudžetas",
+    "This quick estimate stays in your browser and is not saved.": "Šis greitas įvertis lieka jūsų naršyklėje ir nėra išsaugomas.",
+})
+EXTRA_TRANSLATIONS["az"].update({
+    "Monthly snapshot": "Aylıq icmal", "A quick estimate": "Sürətli təxmin", "Live preview": "Canlı önizləmə",
+    "Monthly income": "Aylıq gəlir", "Monthly expenses": "Aylıq xərclər", "Estimated money left": "Təxmini qalan məbləğ",
+    "A little breathing room this month.": "Bu ay xərcləmək üçün bir qədər pulunuz qalır.", "Expenses are higher than income.": "Xərclər gəlirdən çoxdur.",
+    "Your income is fully allocated.": "Gəlirinizin hamısı bölüşdürülüb.", "left": "qalıb", "Left": "Qalıq", "Over budget": "Büdcə aşılıb",
+    "This quick estimate stays in your browser and is not saved.": "Bu sürətli təxmin brauzerinizdə qalır və yadda saxlanılmır.",
+})
+EXTRA_TRANSLATIONS["uk"].update({
+    "Monthly snapshot": "Місячний огляд", "A quick estimate": "Швидка оцінка", "Live preview": "Попередній перегляд наживо",
+    "Monthly income": "Місячний дохід", "Monthly expenses": "Місячні витрати", "Estimated money left": "Орієнтовний залишок",
+    "A little breathing room this month.": "Цього місяця у вас залишилося трохи вільних коштів.", "Expenses are higher than income.": "Витрати перевищують дохід.",
+    "Your income is fully allocated.": "Увесь дохід розподілено.", "left": "залишилося", "Left": "Залишок", "Over budget": "Бюджет перевищено",
+    "This quick estimate stays in your browser and is not saved.": "Ця швидка оцінка залишається у браузері й не зберігається.",
+})
 EXTRA_TRANSLATIONS["lt"]["Delete selected items"] = "Ištrinti pasirinktus įrašus"
 EXTRA_TRANSLATIONS["az"]["Delete selected items"] = "Seçilmişləri sil"
 EXTRA_TRANSLATIONS["uk"]["Delete selected items"] = "Видалити вибрані записи"
