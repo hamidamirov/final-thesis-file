@@ -1,3 +1,9 @@
+from django.utils.functional import lazy
+from django.utils.translation import get_language
+
+from .additional_ui_text import ADDITIONAL_UI_TEXT
+
+
 TRANSLATIONS = {
     "lt": {
         "Mobile finance dashboard preview": "Finansų skydelio telefone peržiūra", "Budget on track": "Biudžetas laikosi plano", "My finances": "Mano finansai", "Available balance": "Likutis", "Food and essentials": "Maistas ir būtiniausios išlaidos", "Study grant": "Studijų stipendija",
@@ -129,6 +135,9 @@ EXTRA_TRANSLATIONS["uk"]["Delete selected items"] = "Видалити вибра
 EXTRA_TRANSLATIONS["lt"]["Support"] = "Pagalba"
 EXTRA_TRANSLATIONS["az"]["Support"] = "Dəstək"
 EXTRA_TRANSLATIONS["uk"]["Support"] = "Підтримка"
+EXTRA_TRANSLATIONS["lt"].update({"Users and groups": "Naudotojai ir grupės", "Security": "Sauga"})
+EXTRA_TRANSLATIONS["az"].update({"Users and groups": "İstifadəçilər və qruplar", "Security": "Təhlükəsizlik"})
+EXTRA_TRANSLATIONS["uk"].update({"Users and groups": "Користувачі та групи", "Security": "Безпека"})
 
 
 def translate_ui(text, language="en", **values):
@@ -136,4 +145,37 @@ def translate_ui(text, language="en", **values):
     translated = EXTRA_TRANSLATIONS.get(language, {}).get(
         text, TRANSLATIONS.get(language, {}).get(text, text)
     )
+    if translated == text and text in ADDITIONAL_UI_TEXT and language in ("lt", "az", "uk"):
+        translated = ADDITIONAL_UI_TEXT[text][("lt", "az", "uk").index(language)]
     return translated.format(**values) if values else translated
+
+
+def localize_ui(text, **values):
+    return translate_ui(text, (get_language() or "en").split("-")[0], **values)
+
+
+ui_lazy = lazy(localize_ui, str)
+
+
+def _localize_admin_label(text):
+    translated = localize_ui(text)
+    if translated != text or not text or not text[0].islower():
+        return translated
+    capitalized = text[0].upper() + text[1:]
+    translated = localize_ui(capitalized)
+    return translated[0].lower() + translated[1:] if translated != capitalized else text
+
+
+def localize_admin_model(model):
+    def label(original):
+        text = str(original)
+        keys = (text, text[:1].upper() + text[1:])
+        if any(translate_ui(key, language) != key for key in keys for language in ("az", "lt", "uk")):
+            return lazy(_localize_admin_label, str)(text)
+        return original
+
+    options = model._meta
+    options.verbose_name = label(options.verbose_name)
+    options.verbose_name_plural = label(options.verbose_name_plural)
+    for field in options.fields:
+        field.verbose_name = label(field.verbose_name)

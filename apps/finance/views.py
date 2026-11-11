@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 
-from apps.core.ui_text import translate_ui
+from apps.core.ui_text import localize_ui, translate_ui
 
 from .forms import (
     AccountDetailsForm,
@@ -50,9 +50,10 @@ REGISTRATION_RESEND_LIMIT = 3
 def _send_registration_code(email, code):
     try:
         return send_mail(
-            "Verify your StudentBudget email",
-            f"Your StudentBudget verification code is {code}.\n\n"
-            "It expires in 2 minutes. If you did not request this, ignore this email.",
+            localize_ui("Verify your StudentBudget email"),
+            localize_ui("Your StudentBudget verification code is {code}.", code=code)
+            + "\n\n"
+            + localize_ui("It expires in 2 minutes. If you did not request this, ignore this email."),
             None,
             [email],
             connection=get_connection(timeout=15),
@@ -115,21 +116,21 @@ def signup(request):
                 },
             )
         except IntegrityError:
-            form.add_error(None, "Registration could not be started. Please try again.")
+            form.add_error(None, localize_ui("Registration could not be started. Please try again."))
         else:
             if not created:
                 if request.session.get("pending_registration_id") == pending.pk:
                     return redirect("signup_verify")
                 if pending.blocked_until and pending.blocked_until > now:
-                    form.add_error("email", "Too many incorrect codes. Request a new code after the 15-minute lockout.")
+                    form.add_error("email", localize_ui("Too many incorrect codes. Request a new code after the 15-minute lockout."))
                 else:
-                    form.add_error("email", "A registration is already in progress. Use the original verification page or try again later.")
+                    form.add_error("email", localize_ui("A registration is already in progress. Use the original verification page or try again later."))
             else:
                 if _send_registration_code(pending.email, code):
                     request.session["pending_registration_id"] = pending.pk
                     return redirect("signup_verify")
                 pending.delete()
-                form.add_error(None, "The verification email could not be sent. Please try again.")
+                form.add_error(None, localize_ui("The verification email could not be sent. Please try again."))
     return render(request, "registration/signup.html", {"form": form})
 
 
@@ -165,13 +166,13 @@ def signup_verify(request):
                     return redirect("signup")
                 now = timezone.now()
                 if pending.expires_at <= now or not pending.attempts_left:
-                    form.add_error("code", "This code is no longer valid.")
+                    form.add_error("code", localize_ui("This code is no longer valid."))
                 elif not check_password(form.cleaned_data["code"], pending.code_hash):
                     pending.attempts_left -= 1
                     if pending.attempts_left == 0:
                         pending.blocked_until = now + REGISTRATION_LOCKOUT
                     pending.save(update_fields=["attempts_left", "blocked_until"])
-                    form.add_error("code", "The verification code is incorrect.")
+                    form.add_error("code", localize_ui("The verification code is incorrect."))
                 elif user_model.objects.filter(
                     Q(username=pending.username) | Q(email__iexact=pending.email)
                 ).exists():
@@ -187,7 +188,7 @@ def signup_verify(request):
                     pending.delete()
         except IntegrityError:
             user = None
-            form.add_error(None, "The account could not be created. Start registration again.")
+            form.add_error(None, localize_ui("The account could not be created. Start registration again."))
 
     if user is not None:
         request.session.pop("pending_registration_id", None)
@@ -214,6 +215,15 @@ def signup_verify(request):
             "resend_error": resend_error,
         },
     )
+
+
+def past_or_current_month(value, current_month):
+    try:
+        year, month = value.split("-", maxsplit=1)
+        selected_month = date(int(year), int(month), 1)
+    except ValueError:
+        return None
+    return selected_month if selected_month <= current_month else None
 
 
 @login_required
@@ -338,39 +348,27 @@ def dashboard(request):
     search_query = request.GET.get("q", "").strip()
     selected_type = request.GET.get("type", "")
     selected_transaction_month = request.GET.get("transaction_month", "").strip()
+    month_start = first_day_of_current_month()
     if search_query:
         transaction_list = transaction_list.filter(
             Q(category__icontains=search_query) | Q(note__icontains=search_query)
         )
     if selected_type in Transaction.Type.values:
         transaction_list = transaction_list.filter(type=selected_type)
-    if selected_transaction_month:
-        try:
-            transaction_year_text, transaction_month_text = selected_transaction_month.split(
-                "-", maxsplit=1
-            )
-            transaction_month_start = date(
-                int(transaction_year_text), int(transaction_month_text), 1
-            )
-            if transaction_month_start.month == 12:
-                transaction_next_month = date(transaction_month_start.year + 1, 1, 1)
-            else:
-                transaction_next_month = date(
-                    transaction_month_start.year, transaction_month_start.month + 1, 1
-                )
-            transaction_list = transaction_list.filter(
-                date__gte=transaction_month_start,
-                date__lt=transaction_next_month,
-            )
-        except (ValueError, TypeError):
-            selected_transaction_month = ""
+    transaction_month = past_or_current_month(selected_transaction_month, month_start)
+    if transaction_month:
+        transaction_list = transaction_list.filter(
+            date__year=transaction_month.year, date__month=transaction_month.month,
+        )
+        selected_transaction_month = transaction_month.isoformat()[:7]
+    else:
+        selected_transaction_month = ""
     totals = user_transactions.aggregate(
         income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
         expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
     )
     income = totals["income"] or Decimal("0.00")
     expenses = totals["expenses"] or Decimal("0.00")
-    month_start = first_day_of_current_month()
     budgets = Budget.objects.filter(user=request.user, month=month_start)
     for budget in budgets:
         budget.spent = (
@@ -415,12 +413,7 @@ def dashboard(request):
         challenge.user_entry = challenge_entries.get(challenge.pk)
 
     # A month-specific report, scoped to the signed-in user's transactions.
-    month_value = request.GET.get("month", "")
-    try:
-        year_text, month_text = month_value.split("-", maxsplit=1)
-        report_month = date(int(year_text), int(month_text), 1)
-    except (ValueError, TypeError):
-        report_month = month_start
+    report_month = past_or_current_month(request.GET.get("month", ""), month_start) or month_start
 
     if report_month.month == 12:
         next_month = date(report_month.year + 1, 1, 1)
@@ -494,12 +487,8 @@ def dashboard(request):
 
 @login_required
 def monthly_report_csv(request):
-    month_value = request.GET.get("month", "")
-    try:
-        year_text, month_text = month_value.split("-", maxsplit=1)
-        report_month = date(int(year_text), int(month_text), 1)
-    except (ValueError, TypeError):
-        report_month = first_day_of_current_month()
+    month_start = first_day_of_current_month()
+    report_month = past_or_current_month(request.GET.get("month", ""), month_start) or month_start
 
     if report_month.month == 12:
         next_month = date(report_month.year + 1, 1, 1)

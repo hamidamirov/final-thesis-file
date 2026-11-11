@@ -328,7 +328,7 @@
         <input type="hidden" name="month" value="{{ report_month|date:'Y-m' }}">
         <input type="hidden" name="dashboard_view" value="transactions">
         <input type="search" name="q" value="{{ search_query }}" placeholder="{% tr 'Search category or note' %}">
-        <input type="month" name="transaction_month" value="{{ selected_transaction_month }}" aria-label="{% tr 'Filter by month' %}">
+        <input type="month" name="transaction_month" value="{{ selected_transaction_month }}" max="{{ current_month|date:'Y-m' }}" aria-label="{% tr 'Filter by month' %}">
         <select name="type" aria-label="{% tr 'Filter by transaction type' %}">
           <option value="">{% tr "All types" %}</option>
           {% for value, label in transaction_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label|translate:site_language }}</option>{% endfor %}
@@ -473,7 +473,7 @@
       <h2>{% tr "Monthly report" %} — {{ report_month|date:"F Y" }}</h2>
       <form method="get" class="month-filter">
         <label for="report-month">{% tr "Select month" %}
-          <input id="report-month" type="month" name="month" value="{{ report_month|date:'Y-m' }}">
+          <input id="report-month" type="month" name="month" value="{{ report_month|date:'Y-m' }}" max="{{ current_month|date:'Y-m' }}">
         </label>
         <button type="submit">{% tr "View report" %}</button>
       </form>

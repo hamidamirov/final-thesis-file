@@ -16,15 +16,17 @@
     .story-panel::before { width: 430px; height: 430px; top: -250px; left: -140px; border: 1px solid #ffffff2b; box-shadow: 0 0 0 35px #ffffff08, 0 0 0 75px #ffffff08; }
     .story-panel::after { width: 420px; height: 130px; bottom: -72px; right: -105px; background: #75dfb733; transform: rotate(-16deg); }
     .form-content { display: flex; width: 100%; min-height: calc(100vh - 52px); flex-direction: column; }
-    .auth-topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 4px 0 22px; }
+    .auth-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 4px 0 22px; }
     .auth-register { margin: 0; color: #62758d; font-size: 13px; white-space: nowrap; }
     .auth-register a { margin-left: 5px; color: #2675bc; font-weight: 700; text-decoration: none; }
     .auth-register a:hover { text-decoration: underline; }
-    .auth-topbar .header-preferences { display: inline-flex; align-items: center; }
+    .auth-topbar .header-preferences { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; }
     .auth-topbar .header-language-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #d4dfeb; border-radius: 999px; background: #fff; }
-    .auth-topbar .header-language-switch form { margin: 0; }
+    .auth-topbar .header-language-switch form, .auth-topbar .header-theme-toggle { margin: 0; }
     .auth-topbar .header-language-switch button { min-width: 35px; padding: 6px 8px; border: 0; border-radius: 999px; color: #48627d; background: transparent; font: 700 11px Arial, sans-serif; cursor: pointer; }
     .auth-topbar .header-language-switch button[aria-current="true"] { border: 1px solid #1675d1; color: #1675d1; background: #f2f8ff; }
+    .auth-topbar .header-theme-toggle button { display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #173b67; background: #edf3f8; font: 21px/1 Arial, sans-serif; cursor: pointer; }
+    .auth-topbar .header-theme-toggle button:hover { background: #e8eef7; }
     .auth-center { width: min(100%, 460px); margin: auto; padding: 8px 0 28px; }
     h1 { margin: 0; color: #173b67; font-size: 30px; letter-spacing: -.5px; }
     .form-intro { margin: 9px 0 22px; color: #667b93; line-height: 1.5; }
@@ -93,6 +95,8 @@
     body[data-theme="dark"] .auth-topbar .header-language-switch { border-color: #52647a; background: #1c2736; }
     body[data-theme="dark"] .auth-topbar .header-language-switch button { color: #c1d1e3; }
     body[data-theme="dark"] .auth-topbar .header-language-switch button[aria-current="true"] { border-color: #8fc1ff; color: #8fc1ff; background: #253347; }
+    body[data-theme="dark"] .auth-topbar .header-theme-toggle button { color: #e7edf5; background: #253347; }
+    body[data-theme="dark"] .auth-topbar .header-theme-toggle button:hover { background: #344357; }
     body[data-theme="dark"] .story-panel { background: radial-gradient(ellipse at 75% 18%, #263b91 0, transparent 40%), linear-gradient(145deg, #111d49, #123b68 58%, #155750); }
     @media (max-width: 850px) { .auth-layout { grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr); } .form-panel { padding-right: 28px; padding-left: 28px; } .story-panel { padding: 38px 25px; } }
     @media (max-width: 680px) { .auth-layout { grid-template-columns: 1fr; } .form-panel { grid-column: 1; grid-row: 1; min-height: 100vh; padding: 18px 22px; } .form-content { min-height: calc(100vh - 36px); } .auth-topbar { align-items: flex-start; } .auth-register { font-size: 11px; } .auth-topbar .header-language-switch button { min-width: 29px; padding: 6px 5px; } .story-panel { grid-column: 1; grid-row: 2; min-height: 650px; padding: 44px 20px; } .mini-app { grid-template-columns: 82px minmax(0, 1fr); } .mini-nav { padding: 12px 6px; } .mini-content { padding: 10px; } }
@@ -104,7 +108,7 @@
       <div class="form-content">
         <div class="auth-topbar">
           <p class="auth-register">{% tr "Already have an account?" %}<a href="{% url 'login' %}">{% tr "Sign in" %}</a></p>
-          {% include "includes/preferences.html" with header_mode=True language_only=True %}
+          {% include "includes/preferences.html" with header_mode=True language_only=False %}
         </div>
         <main class="auth-center">
           <h1>{% tr "Create your account" %}</h1>
@@ -138,19 +142,19 @@
             <p class="eyebrow">{% tr "Personal finance for student life" %}</p>
             <h2>{% tr "Personal Finance Management System for Students" %}</h2>
             <p>{% tr "The website helps university students manage personal finances more effectively and understand where their money goes." %}</p>
-            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/dashboard</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Your finances in one place" %}</h3><div class="mini-summary"><span>{% tr "Income" %}<b>••••</b></span><span>{% tr "Expenses" %}<b>••••</b></span><span>{% tr "Balance" %}<b>••••</b></span></div><div class="mini-data"><p><span>{% tr "Recent transactions" %}</span><b>{% tr "View all" %} →</b></p><p><span>{% tr "Monthly budget" %}</span><b>{% tr "On track" %}</b></p></div></div></div></div>
+            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/dashboard</span></div><div class="mini-app"><aside class="mini-nav"><strong>{% tr "Student Finance" %}</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Your finances in one place" %}</h3><div class="mini-summary"><span>{% tr "Income" %}<b>••••</b></span><span>{% tr "Expenses" %}<b>••••</b></span><span>{% tr "Balance" %}<b>••••</b></span></div><div class="mini-data"><p><span>{% tr "Recent transactions" %}</span><b>{% tr "View all" %} →</b></p><p><span>{% tr "Monthly budget" %}</span><b>{% tr "On track" %}</b></p></div></div></div></div>
           </article>
           <article class="story-slide" aria-label="{% tr 'Slide 2' %}">
             <p class="eyebrow">{% tr "Plan with clarity" %}</p>
             <h2>{% tr "Track transactions and monthly budgets" %}</h2>
             <p>{% tr "Record income and expenses and review them in one place." %} {% tr "Set category limits and see how much you have spent." %}</p>
-            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/budget</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Monthly budget" %}</h3><div class="mini-summary"><span>{% tr "Food" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Transport" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Books" %}<b>{% tr "Planned" %}</b></span></div><div class="mini-data"><p><span>{% tr "Food and essentials" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:62%"></span></div><p><span>{% tr "Transport" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:38%"></span></div></div></div></div></div>
+            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/budget</span></div><div class="mini-app"><aside class="mini-nav"><strong>{% tr "Student Finance" %}</strong><span>{% tr "Dashboard" %}</span><span>{% tr "Transactions" %}</span><span>{% tr "Monthly budget" %}</span></aside><div class="mini-content"><h3>{% tr "Monthly budget" %}</h3><div class="mini-summary"><span>{% tr "Food" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Transport" %}<b>{% tr "Planned" %}</b></span><span>{% tr "Books" %}<b>{% tr "Planned" %}</b></span></div><div class="mini-data"><p><span>{% tr "Food and essentials" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:62%"></span></div><p><span>{% tr "Transport" %}</span><b>{% tr "Budget" %}</b></p><div class="mini-progress"><span style="width:38%"></span></div></div></div></div></div>
           </article>
           <article class="story-slide" aria-label="{% tr 'Slide 3' %}">
             <p class="eyebrow">{% tr "Small steps, steady progress" %}</p>
             <h2>{% tr "Save, learn, and find student offers" %}</h2>
             <p>{% tr "Set a target and follow your savings progress over time." %} {% tr "Explore financial tips, saving challenges, and student discount offers." %}</p>
-            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/student-tools</span></div><div class="mini-app"><aside class="mini-nav"><strong>Student Finance</strong><span>{% tr "Savings goals" %}</span><span>{% tr "Saving challenges" %}</span><span>{% tr "Student offers" %}</span></aside><div class="mini-content"><h3>{% tr "Student tools" %}</h3><div class="mini-data"><p><span>{% tr "Savings goals" %}</span><b>{% tr "Follow your progress over time" %}</b></p><div class="mini-progress"><span style="width:72%"></span></div><p><span>{% tr "Saving challenges" %}</span><b>{% tr "Build a habit" %}</b></p><p><span>{% tr "Student discount offers" %}</span><b>{% tr "Browse offers" %} →</b></p></div></div></div></div>
+            <div class="mini-browser"><div class="mini-browser-bar"><i></i><i></i><i></i><span>studentfinance.local/student-tools</span></div><div class="mini-app"><aside class="mini-nav"><strong>{% tr "Student Finance" %}</strong><span>{% tr "Savings goals" %}</span><span>{% tr "Saving challenges" %}</span><span>{% tr "Student offers" %}</span></aside><div class="mini-content"><h3>{% tr "Student tools" %}</h3><div class="mini-data"><p><span>{% tr "Savings goals" %}</span><b>{% tr "Follow your progress over time" %}</b></p><div class="mini-progress"><span style="width:72%"></span></div><p><span>{% tr "Saving challenges" %}</span><b>{% tr "Build a habit" %}</b></p><p><span>{% tr "Student discount offers" %}</span><b>{% tr "Browse offers" %} →</b></p></div></div></div></div>
           </article>
         </div>
         <div class="carousel-dots" role="group" aria-label="{% tr 'Choose a slide' %}">

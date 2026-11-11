@@ -232,19 +232,7 @@
         <a class="brand" href="#home" aria-label="{% tr 'Student Finance' %}"><span class="brand-logo"><img src="{% static 'core/student-finance-logo.jpg' %}" alt="{% tr 'Student Finance logo' %}"></span><span>{% tr "Student Finance" %}</span></a>
       </div>
       <div class="header-tools">
-        <form class="navbar-language" method="post" action="{% url 'save_preferences' %}">
-          {% csrf_token %}
-          <input type="hidden" name="next" value="{{ request.get_full_path }}">
-          <select name="language" aria-label="{% tr 'Language' %}" onchange="this.form.requestSubmit()">
-            {% for code, label in language_options %}<option value="{{ code }}" {% if site_language == code %}selected{% endif %}>{{ code|upper }}</option>{% endfor %}
-          </select>
-        </form>
-        <form class="navbar-theme" method="post" action="{% url 'save_preferences' %}">
-          {% csrf_token %}
-          <input type="hidden" name="next" value="{{ request.get_full_path }}">
-          <input type="hidden" name="language" value="{{ site_language }}">
-          <button type="submit" name="theme" value="{% if site_theme == 'dark' %}light{% else %}dark{% endif %}" title="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}" aria-label="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}">{% if site_theme == "dark" %}☀{% else %}☾{% endif %}</button>
-        </form>
+        {% include "includes/navbar_preferences.html" %}
         <a class="header-login" href="{% url 'login' %}">{% tr "Log in" %}</a>
         <a class="header-signup" href="{% url 'signup' %}">{% tr "Create your account" %}</a>
       </div>

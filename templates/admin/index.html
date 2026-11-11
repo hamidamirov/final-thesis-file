@@ -1,0 +1,163 @@
+{% extends "admin/base_site.html" %}
+{% load i18n ui %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    body.dashboard #content {
+      --overview-surface: #fff;
+      --overview-heading: #f5f8fc;
+      --overview-muted: #516881;
+      --overview-control: #eef2f7;
+      --overview-add-bg: #e9f4ed;
+      --overview-add-text: #265641;
+      --overview-change-bg: #e9f0fb;
+      --overview-change-text: #234e78;
+      box-sizing: border-box;
+      width: min(calc(100% - 64px), 1500px);
+      margin: 0 auto;
+      padding: 32px 0;
+    }
+    body.dashboard[data-theme="dark"] #content {
+      --overview-surface: #1c2736;
+      --overview-heading: #202e40;
+      --overview-muted: #b9c9dc;
+      --overview-control: #2a384a;
+      --overview-add-bg: #253f36;
+      --overview-add-text: #c3e7d1;
+      --overview-change-bg: #253d56;
+      --overview-change-text: #c7dfff;
+    }
+    .dashboard #content > h1 { margin: 0 0 22px; color: var(--admin-ink); font-size: clamp(24px, 3vw, 30px); font-weight: 700; letter-spacing: -.015em; }
+    .admin-overview { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 330px); gap: 24px; align-items: start; }
+    .overview-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; }
+    .overview-card { min-width: 0; border: 1px solid var(--admin-line); border-radius: 16px; background: var(--overview-surface); box-shadow: 0 4px 16px #152c4810; }
+    .overview-card--finance { grid-column: 1 / -1; }
+    .overview-card > h2 { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--admin-line); border-radius: 15px 15px 0 0; color: var(--admin-ink); background: var(--overview-heading); font-size: 15px; font-weight: 700; line-height: 1.4; }
+    .overview-card ul { margin: 0; padding: 0; list-style: none; }
+    .overview-card li { margin: 0; list-style: none; }
+    .overview-models { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .overview-card--finance .overview-models { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .overview-model { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-width: 0; padding: 11px 16px; }
+    .overview-model:nth-child(n+2), .overview-activity li + li { border-top: 1px solid var(--admin-line); }
+    .overview-card--finance .overview-model:nth-child(2) { border-top: 0; }
+    .overview-card--finance .overview-model:nth-child(even) { border-inline-start: 1px solid var(--admin-line); }
+    .overview-card--finance .overview-model:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .overview-model-name { flex: 1 1 120px; min-width: 0; color: var(--admin-ink); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+    .overview-model-name a { color: inherit; }
+    .overview-model-name a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .overview-model-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .overview-model-actions a:link, .overview-model-actions a:visited { display: inline-flex; align-items: center; justify-content: center; min-height: 28px; padding: 3px 10px; border: 1px solid transparent; border-radius: 8px; color: var(--overview-change-text); background: var(--overview-change-bg); font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .overview-model-actions .overview-add:link, .overview-model-actions .overview-add:visited { color: var(--overview-add-text); background: var(--overview-add-bg); }
+    .overview-model-actions a:hover { border-color: currentColor; }
+    .overview-model-actions a:focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
+    .overview-activity li { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: start; gap: 10px; padding: 11px 16px; color: var(--admin-ink); }
+    .overview-activity strong { display: block; margin-bottom: 3px; font-size: 13px; }
+    .overview-activity small, .overview-card > p { color: var(--overview-muted); font-size: 12px; }
+    .overview-activity li > div { min-width: 0; overflow-wrap: anywhere; }
+    .overview-activity li > form { margin: 0; justify-self: end; }
+    .overview-entry-tools { display: flex; gap: 4px; }
+    .overview-activity button { border: 0; border-radius: 7px; padding: 5px 9px; color: var(--admin-ink); background: var(--overview-control); font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+    .overview-activity button:hover { text-decoration: underline; }
+    .overview-activity button:focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
+    .overview-activity .overview-delete { background: transparent; }
+    .overview-activity .overview-delete:hover { background: var(--overview-control); }
+    .overview-activity-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--admin-line); }
+    .overview-card > p { margin: 0; padding: 14px 16px; }
+    @media (min-width: 851px) and (max-width: 1120px) { .overview-sections, .overview-card--finance .overview-models { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 850px) { .admin-overview { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 600px) {
+      body.dashboard #content { width: calc(100% - 28px); padding: 22px 0; }
+      .overview-sections, .overview-card--finance .overview-models { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (min-width: 851px) and (max-width: 1120px), (max-width: 600px) {
+      .overview-card--finance .overview-model:nth-child(2) { border-top: 1px solid var(--admin-line); }
+      .overview-card--finance .overview-model:nth-child(even) { border-inline-start: 0; }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="admin-overview">
+    <div class="overview-sections">
+      {% for app in app_list|admin_overview_order %}
+        <section class="overview-card overview-card--{{ app.app_label }}" aria-labelledby="overview-{{ app.app_label }}">
+          <h2 id="overview-{{ app.app_label }}">
+            {% if app.app_label == "auth" %}{% tr "Users and groups" %}
+            {% elif app.app_label == "axes" %}{% tr "Security" %}
+            {% else %}{{ app.name }}{% endif %}
+          </h2>
+          <ul class="overview-models">
+            {% for model in app.models %}
+              <li class="overview-model">
+                {% with name_id=app.app_label|add:"-"|add:model.object_name %}
+                  <span class="overview-model-name" id="{{ name_id }}">
+                    {% if model.admin_url %}<a href="{{ model.admin_url }}">{{ model.name }}</a>
+                    {% else %}{{ model.name }}{% endif %}
+                  </span>
+                  <div class="overview-model-actions">
+                    {% if model.add_url %}<a class="overview-add" href="{{ model.add_url }}" aria-describedby="{{ name_id }}">{% translate "Add" %}</a>{% endif %}
+                    {% if model.admin_url %}
+                      <a href="{{ model.admin_url }}" aria-describedby="{{ name_id }}">{% if model.view_only %}{% translate "View" %}{% else %}{% translate "Change" %}{% endif %}</a>
+                    {% endif %}
+                  </div>
+                {% endwith %}
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% empty %}
+        <p>{% translate "You don’t have permission to view or edit anything." %}</p>
+      {% endfor %}
+    </div>
+
+    <aside class="overview-card overview-activity" aria-labelledby="overview-recent-actions">
+      <h2 id="overview-recent-actions">{% tr "Recent actions" %}</h2>
+      {% recent_admin_activity user as activity %}
+      {% if activity.entries or activity.can_restore %}
+        <form class="overview-activity-tools" method="post" action="{% url 'manage_admin_activity' %}">
+          {% csrf_token %}
+          {% if activity.entries %}<button type="submit" name="action" value="clear">{% tr "Clear list" %}</button>{% endif %}
+          {% if activity.can_restore %}<button type="submit" name="action" value="restore">{% tr "Restore hidden actions" %}</button>{% endif %}
+          <button type="submit" name="action" value="delete_history">{% tr "Delete my history" %}</button>
+        </form>
+      {% endif %}
+      {% if activity.entries %}
+        <ul>
+          {% for entry in activity.entries %}
+            <li>
+              <div>
+                <strong>
+                  {% if entry.is_deletion or not entry.get_admin_url %}
+                    {{ entry.object_repr|default:"—" }}
+                  {% else %}
+                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr|default:"—" }}</a>
+                  {% endif %}
+                </strong>
+                <small>
+                  {% if entry.is_addition %}{% tr "Added:" %}
+                  {% elif entry.is_change %}{% tr "Changed:" %}
+                  {% elif entry.is_deletion %}{% tr "Deleted:" %}{% endif %}
+                  {% if entry.content_type %}{{ entry.content_type.name|capfirst }} · {% endif %}
+                  <time datetime="{{ entry.action_time|date:'c' }}">{{ entry.action_time|date:"SHORT_DATETIME_FORMAT" }}</time>
+                </small>
+              </div>
+              <form class="overview-entry-tools" method="post" action="{% url 'manage_admin_activity' %}">
+                {% csrf_token %}
+                <input type="hidden" name="entry_id" value="{{ entry.pk|slugify }}">
+                <button type="submit" name="action" value="hide">{% tr "Hide" %}</button>
+                <button class="overview-delete" type="submit" name="action" value="delete_entry">{% tr "Delete" %}</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>{% tr "None available" %}</p>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

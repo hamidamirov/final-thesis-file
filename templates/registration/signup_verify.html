@@ -1,10 +1,10 @@
-{% load l10n %}
+{% load l10n ui %}
 <!doctype html>
-<html lang="en">
+<html lang="{{ site_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Verify your email | Student Finance</title>
+  <title>{% tr "Verify your email" %} | {% tr "Student Finance" %}</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; font-family: Arial, sans-serif; color: #173b67; background: #f7faff; }
@@ -38,8 +38,8 @@
 </head>
 <body data-theme="{{ site_theme }}">
   <main>
-    <h1>Verify your email</h1>
-    <p>Enter the six-digit code sent to <strong>{{ email }}</strong>. The code expires 2 minutes after you request it.</p>
+    <h1>{% tr "Verify your email" %}</h1>
+    <p>{% tr "Enter the six-digit code sent to" %} <strong>{{ email }}</strong>. {% tr "The code expires 2 minutes after you request it." %}</p>
     <form method="post">
       {% csrf_token %}
       {% if can_verify %}
@@ -48,27 +48,27 @@
         {{ form.code }}
         <div class="code-boxes" id="verification-code-boxes" role="group" aria-labelledby="verification-code-label" hidden>
           {% for digit in "123456" %}
-            <input type="text" inputmode="numeric" pattern="[0-9]" aria-label="Digit {{ digit }} of 6" {% if forloop.first %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %}>
+            <input type="text" inputmode="numeric" pattern="[0-9]" aria-label="{% tr "Digit {digit} of 6" digit=digit %}" {% if forloop.first %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %}>
           {% endfor %}
         </div>
         {{ form.code.errors }}
       {% endif %}
       <div class="code-timer" id="verification-timer" data-remaining-ms="{{ remaining_ms|unlocalize }}" hidden>
-        <p><span>{% if is_blocked %}Lockout ends in{% else %}Time remaining{% endif %}</span> <span id="verification-countdown"></span></p>
+        <p><span>{% if is_blocked %}{% tr "Lockout ends in" %}{% else %}{% tr "Time remaining" %}{% endif %}</span> <span id="verification-countdown"></span></p>
       </div>
-      <p id="verification-locked" role="status" {% if not is_blocked %}hidden{% endif %}>Too many incorrect codes. Wait until the lockout ends.</p>
-      <p id="verification-expired" role="status" {% if can_verify or is_blocked %}hidden{% endif %}>This code is no longer valid.</p>
-      <button type="submit" id="verification-submit" {% if not can_verify %}disabled{% endif %}>Verify and create account</button>
+      <p id="verification-locked" role="status" {% if not is_blocked %}hidden{% endif %}>{% tr "Too many incorrect codes. Wait until the lockout ends." %}</p>
+      <p id="verification-expired" role="status" {% if can_verify or is_blocked %}hidden{% endif %}>{% tr "This code is no longer valid." %}</p>
+      <button type="submit" id="verification-submit" {% if not can_verify %}disabled{% endif %}>{% tr "Verify and create account" %}</button>
     </form>
     <form method="post" class="resend-form">
       {% csrf_token %}
-      <button type="submit" id="verification-resend" name="action" value="resend" data-resends-left="{{ resends_left|unlocalize }}" {% if not can_resend %}disabled{% endif %}>Request a new code</button>
+      <button type="submit" id="verification-resend" name="action" value="resend" data-resends-left="{{ resends_left|unlocalize }}" {% if not can_resend %}disabled{% endif %}>{% tr "Request a new code" %}</button>
       {% if resends_left %}
-        <p class="resend-note">New code requests left: {{ resends_left }}</p>
+        <p class="resend-note">{% tr "New code requests left: {count}" count=resends_left %}</p>
       {% else %}
-        <p class="resend-note">You have reached the limit of three new codes.</p>
+        <p class="resend-note">{% tr "You have reached the limit of three new codes." %}</p>
       {% endif %}
-      {% if resend_error %}<p class="errorlist" role="alert">{{ resend_error }}</p>{% endif %}
+      {% if resend_error %}<p class="errorlist" role="alert">{{ resend_error|translate:site_language }}</p>{% endif %}
     </form>
   </main>
     <script>

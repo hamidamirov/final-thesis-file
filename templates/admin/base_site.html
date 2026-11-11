@@ -1,10 +1,16 @@
 {% extends "admin/base.html" %}
-{% load ui %}
+{% load ui static %}
+
+{% block header %}
+  <div class="admin-header-area" data-theme="{{ site_theme }}">
+    {{ block.super }}
+  </div>
+{% endblock %}
 
 {% block branding %}
   <a class="admin-brand" href="{% url 'admin:index' %}">
-    <span class="admin-brand-mark">SF</span>
-    <span class="admin-brand-copy"><strong>{% tr "Student Finance" %}</strong><small>Admin workspace</small></span>
+    <span class="admin-brand-mark"><img src="{% static 'core/student-finance-logo.jpg' %}" alt=""></span>
+    <span>{% tr "Student Finance" %}</span>
   </a>
 {% endblock %}
 
@@ -14,32 +20,28 @@
     :root { --admin-ink: #173b67; --admin-blue: #1675d1; --admin-line: #d7e4f3; --admin-bg: #eef4fb; --delete-button-bg: #64748b; --delete-button-hover-bg: #475569; }
     html { color-scheme: light; }
     body { background: var(--admin-bg) !important; color: #172b45 !important; }
-    #header { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 24px; padding: 10px clamp(18px, 4vw, 52px); background: #204d78 !important; color: #fff !important; }
-    #branding { display: flex; align-items: center; float: none; min-width: 220px; }
-    .admin-brand { display: flex; align-items: center; gap: 12px; color: #fff !important; text-decoration: none; }
-    .admin-brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #ffffff50; border-radius: 12px; background: #ffffff16; font-size: 14px; font-weight: 800; }
-    .admin-brand-copy { display: flex; flex-direction: column; gap: 3px; }
-    .admin-brand-copy strong { font-size: 17px; }
-    .admin-brand-copy small { color: #d5e6f7; font-size: 11px; }
+    .admin-header-area { --bar-bg: #fff; --bar-ink: #173b67; --bar-border: #e7edf3; --bar-control-border: #bdcde0; --bar-control-bg: #f3f6fa; --bar-hover: #e8eef7; --bar-primary: #123457; --bar-primary-hover: #1d4a77; display: flow-root; background: var(--bar-bg); }
+    .admin-header-area[data-theme="dark"] { --bar-bg: #172333; --bar-ink: #e7edf5; --bar-border: #344357; --bar-control-border: #52647a; --bar-control-bg: #253347; --bar-hover: #344357; --bar-primary: #234c78; --bar-primary-hover: #315f91; }
+    .admin-header-area #header { box-sizing: border-box; width: min(calc(100% - 64px), 1500px); min-height: 76px; margin: 22px auto 0; padding: 10px 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 22px; border: 1px solid var(--bar-border); border-radius: 21px; background: var(--bar-bg); color: var(--bar-ink); }
+    #header #branding { display: flex; align-items: center; float: none; }
+    #header a.admin-brand { display: inline-flex; align-items: center; gap: 12px; color: var(--bar-ink); font-size: 19px; font-weight: 700; text-decoration: none; }
+    .admin-brand-mark { display: grid; flex: none; width: 48px; height: 42px; place-items: center; overflow: hidden; border-radius: 8px; background: white; }
+    .admin-brand-mark img { width: 100%; height: 100%; object-fit: cover; }
     #changelist .actions .action-select-hidden { display: none; }
     #changelist .actions button.action-delete-button { display: inline-grid; width: 28px; height: 28px; place-items: center; margin-left: 8px; padding: 5px; border: 1px solid #d6e0ec !important; border-radius: 7px; color: #71839a !important; background: transparent !important; vertical-align: middle; cursor: pointer; transition: color .15s ease, background .15s ease, border-color .15s ease; }
     #changelist .actions button.action-delete-button:hover { border-color: #efc3c6 !important; color: #bd3c45 !important; background: #fff1f2 !important; }
     #changelist .actions button.action-delete-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-    #user-tools { display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex-wrap: wrap; float: none; margin: 0; color: #e8f2ff; font-size: 13px; }
-    #user-tools .header-preferences { display: inline-flex; align-items: center; gap: 10px; }
-    #user-tools .header-language-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #ffffff70; border-radius: 999px; background: #ffffff0c; }
-    #user-tools .header-language-switch form, #user-tools .header-theme-toggle { margin: 0; }
-    #user-tools .header-language-switch button { min-width: 34px; padding: 6px 8px; border: 0; border-radius: 999px; color: #e8f2ff; background: transparent; font: 700 11px Arial, sans-serif; cursor: pointer; }
-    #user-tools .header-language-switch button[aria-current="true"] { border: 1px solid #fff; color: #204d78; background: #f3f8ff; }
-    #user-tools .header-theme-toggle button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #ffffff70; border-radius: 50%; color: #315a7c; background: #f2f7fc; font: 20px/1 Arial, sans-serif; cursor: pointer; }
-    #user-tools .header-theme-toggle button:hover { background: #dcecff; }
-    .admin-user-chip { display: inline-flex; align-items: center; gap: 9px; color: #fff; font-weight: 600; white-space: nowrap; }
-    .admin-user-avatar { display: grid; width: 36px; height: 36px; place-items: center; border: 2px solid #ffffff8a; border-radius: 50%; background: #dcecff; color: #204d78; font-size: 13px; font-weight: 800; }
-    #user-tools a { color: #eaf4ff !important; text-decoration: none; }
-    #user-tools a:hover { color: #fff !important; text-decoration: underline; }
-    #logout-form { margin: 0; }
-    #logout-form button { min-height: 38px; padding: 0 16px; border: 1px solid #d7e7f8; border-radius: 8px; color: #fff; background: transparent; font: 700 13px Arial, sans-serif; cursor: pointer; }
-    #logout-form button:hover { background: #ffffff18; }
+    #header #user-tools { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; float: none; min-width: 0; margin: 0 0 0 auto; color: var(--bar-ink); font: 700 13px Arial, sans-serif; letter-spacing: normal; text-transform: none; }
+    #header .navbar-language, #header .navbar-theme, #header #logout-form { margin: 0; }
+    #header .navbar-language select { box-sizing: border-box; min-width: 72px; height: 40px; padding: 0 13px; border: 1px solid var(--bar-control-border); border-radius: 999px; color: var(--bar-ink) !important; background: var(--bar-bg) !important; font: 700 13px Arial, sans-serif; cursor: pointer; }
+    #header .navbar-theme button { display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--bar-ink); background: var(--bar-control-bg); font: 21px/1 Arial, sans-serif; cursor: pointer; }
+    #header .navbar-theme button:hover { background: var(--bar-hover); }
+    .admin-user-chip { display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+    .admin-user-avatar { display: grid; flex: none; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: var(--bar-control-bg); color: var(--bar-ink); }
+    #header #user-tools .admin-header-link, #header #logout-form button { display: inline-flex; box-sizing: border-box; min-height: 40px; align-items: center; margin: 0; padding: 0 15px; border: 1px solid var(--bar-control-border); border-radius: 11px; color: var(--bar-ink); background: transparent; font: 700 13px Arial, sans-serif; letter-spacing: normal; text-decoration: none; text-transform: none; cursor: pointer; }
+    #header #user-tools .admin-header-link:hover { background: var(--bar-control-bg); }
+    #header #logout-form button { border-color: var(--bar-primary); color: white; background: var(--bar-primary); }
+    #header #logout-form button:hover { border-color: var(--bar-primary-hover); background: var(--bar-primary-hover); }
     div.breadcrumbs { background: #fff; color: #57708b; border-bottom: 1px solid var(--admin-line); padding: 12px 24px; }
     div.breadcrumbs a { color: var(--admin-blue); }
     #content { padding: 24px clamp(18px, 4vw, 52px); }
@@ -60,8 +62,79 @@
     .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover { background: #105fae; }
     .object-tools a.addlink, .object-tools a.addlink:link, .object-tools a.addlink:visited { border-radius: 999px; background: #1675d1 !important; color: #fff !important; font-weight: 700; text-decoration: none; }
     .object-tools a.addlink:hover, .object-tools a.addlink:focus { background: #105fae !important; color: #fff !important; }
+    .app-auth.model-user #content-main .field-password a.button { display: inline-block; padding: 7px 12px; color: #fff !important; background: #123457; font-weight: 700; }
+    .app-auth.model-user #content-main .field-password a.button:hover { background: #1d4a77; }
+    .app-auth.model-user #content-main .field-password .help { color: #405c78 !important; font-size: 13px; }
+    #content-main .object-tools a.historylink { padding: 7px 13px; border: 1px solid #bdcde0; border-radius: 8px; color: #173b67 !important; background: #f3f7fd; font-weight: 700; letter-spacing: normal; text-transform: none; }
+    #content-main .object-tools a.historylink:hover { background: #e2eefb; }
+    .app-auth.model-user #content-main .field-password a.button:focus-visible,
+    #content-main .object-tools a.historylink:focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
     .submit-row a.deletelink:link, .submit-row a.deletelink:visited { color: #fff !important; }
+    body.change-form .submit-row input[type="submit"] { border: 1px solid #c7d9ed; background: #e8f1fc !important; color: #173b67 !important; font-weight: 700; text-transform: none; }
+    body.change-form .submit-row input[type="submit"]:hover { background: #d8e8fa !important; }
+    body.change-form .submit-row input[name="_save"] { border-color: #123457; background: #123457 !important; color: #fff !important; }
+    body.change-form .submit-row input[name="_save"]:hover { background: #1d4a77 !important; }
+    body.change-form .submit-row input[type="submit"]:focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
+    body.change-form[data-theme="dark"] .submit-row input[type="submit"] { border-color: #52647a; background: #253a51 !important; color: #e7edf5 !important; }
+    body.change-form[data-theme="dark"] .submit-row input[type="submit"]:hover { background: #344b66 !important; }
+    body.change-form[data-theme="dark"] .submit-row input[name="_save"] { border-color: #3d6a9a; background: #234c78 !important; }
+    body.change-form[data-theme="dark"] .submit-row input[name="_save"]:hover { background: #315f91 !important; }
     input, select, textarea, .selector { border-color: #cbd9ea; border-radius: 6px; }
+    body {
+      --picker-text: #22476b;
+      --picker-background: #edf4fc;
+      --picker-hover: #dfeafa;
+      --picker-surface: #fff;
+    }
+    body[data-theme="dark"] {
+      --picker-text: #d2e7ff;
+      --picker-background: #263b53;
+      --picker-hover: #344f6e;
+      --picker-surface: #1c2736;
+    }
+    body .datetimeshortcuts {
+      display: inline-block;
+      margin-inline-start: 4px;
+      vertical-align: middle;
+      font-size: 0;
+      white-space: nowrap;
+    }
+    body .datetimeshortcuts > a {
+      display: inline-flex;
+      box-sizing: border-box;
+      min-height: 32px;
+      align-items: center;
+      justify-content: center;
+      margin-inline-start: 5px;
+      padding: 0 10px;
+      border: 1px solid var(--admin-line);
+      border-radius: 8px;
+      background: var(--picker-background);
+      color: var(--picker-text);
+      font: 600 12px/1.2 Arial, sans-serif;
+      text-decoration: none;
+      vertical-align: middle;
+    }
+    body .datetimeshortcuts > a[id] { width: 32px; padding: 0; }
+    body .datetimeshortcuts > a:hover { background: var(--picker-hover); }
+    body .datetimeshortcuts > a:focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
+    body .datetimeshortcuts :is(.date-icon, .clock-icon) {
+      top: 0;
+      width: 17px;
+      height: 17px;
+      background: currentColor;
+      mask: var(--picker-icon) left top / 17px auto no-repeat;
+    }
+    body .datetimeshortcuts .date-icon { --picker-icon: url("{% static 'admin/img/icon-calendar.svg' %}"); }
+    body .datetimeshortcuts .clock-icon { --picker-icon: url("{% static 'admin/img/icon-clock.svg' %}"); }
+    body :is(.calendarbox, .clockbox) { border-color: var(--admin-line); border-radius: 12px; background: var(--picker-surface); }
+    body :is(.calendarbox .calendar caption, .clockbox h2) { background: var(--picker-background); color: var(--picker-text); }
+    body .calendarbox .calendar table { background: var(--picker-surface); }
+    body :is(.calendarbox .calendar td a, .clockbox .timelist a) { color: var(--picker-text); }
+    body :is(.calendarbox .calendar td a:hover, .calendarbox .calendar td a:focus, .clockbox .timelist a:hover, .clockbox .timelist a:focus) { background: var(--picker-hover); color: var(--picker-text); }
+    body .calendarbox .calendar td.selected a { background: #234c78; color: #fff; }
+    body .calendarbox .calendar-unavailable { color: var(--picker-text); opacity: .45; cursor: default; }
+    body .calendarbox .calendar td .calendar-unavailable { display: block; padding: 4px; }
     #changelist-filter { border-left: 1px solid var(--admin-line); }
     #changelist, #changelist-form, #changelist-form .results, #result_list, #changelist .paginator { background: #fff !important; color: #29435d !important; }
     #changelist #toolbar, #changelist .actions { border-color: var(--admin-line); background: #f5f9fe !important; color: #29435d !important; }
@@ -77,30 +150,7 @@
     .form-row label, .aligned label { color: #29435d !important; }
     input, select, textarea { background-color: #fff !important; color: #172b45 !important; }
     .help, p.help, span.help, form .help { color: #60758b !important; }
-    body.dashboard #content { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 24px; width: 100%; max-width: none; margin: 0; }
-    body.dashboard #content-main, body.dashboard #content-related { float: none; width: auto; min-width: 0; margin: 0; }
-    body.dashboard #content-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
-    body.dashboard #content h1 { grid-column: 1 / -1; margin: 0; color: var(--admin-ink); font-size: 28px; font-weight: 700; }
-    body.dashboard #content-main .module { margin: 0; border-radius: 13px; background: #fff !important; }
-    body.dashboard #content-main .module table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff !important; }
-    body.dashboard #content-main .module caption { padding: 13px 16px; border-bottom: 1px solid var(--admin-line); border-radius: 12px 12px 0 0; background: #e8f2fc !important; color: var(--admin-ink) !important; font-size: 12px; font-weight: 700; letter-spacing: .07em; text-align: left; text-transform: uppercase; }
-    body.dashboard #content-main .module th, body.dashboard #content-main .module td { padding: 13px 15px; border-bottom: 1px solid #eaf0f7; background: #fff !important; color: #29435d !important; }
-    body.dashboard #content-main .module tr:last-child th, body.dashboard #content-main .module tr:last-child td { border-bottom: 0; }
-    body.dashboard #content-main .module tr:hover th, body.dashboard #content-main .module tr:hover td { background: #f5f9fe !important; }
-    body.dashboard #content-main .module th { font-weight: 600; text-align: left; }
-    body.dashboard #content-main .module td { width: 74px; text-align: center; }
-    body.dashboard #content-main .module a:link, body.dashboard #content-main .module a:visited { color: var(--admin-blue) !important; }
-    body.dashboard #content-main .module .addlink, body.dashboard #content-main .module .changelink { display: inline-block; padding: 5px 8px; border-radius: 6px; background: #eef6ff; font-size: 12px; font-weight: 600; text-decoration: none; }
-    body.dashboard #content-related .module { border-radius: 13px; background: #fff !important; }
-    body.dashboard #content-related .module h2 { padding: 14px 16px; border-bottom: 1px solid var(--admin-line); background: #e8f2fc !important; color: var(--admin-ink) !important; font-size: 16px; }
-    body.dashboard #content-related .module h3 { margin: 15px 16px 8px; color: var(--admin-ink); }
-    body.dashboard #content-related .module ul { padding: 0 16px 12px; }
-    body.dashboard #content-related .module li { margin: 8px 0; color: #60758b; }
-    body.dashboard #content-related .module a { color: var(--admin-blue) !important; }
-    body.dashboard #content-related .module p { padding: 0 16px; color: #60758b; }
-    @media (max-width: 1050px) { body.dashboard #content { grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; } body.dashboard #content-main { grid-template-columns: 1fr; } }
-    @media (max-width: 767px) { body.dashboard #content { display: block; } body.dashboard #content-related { margin-top: 18px; } }
-    @media (max-width: 767px) { #header { align-items: flex-start; flex-direction: column; gap: 12px; padding: 12px 16px; } #content { padding: 16px 12px; } #user-tools { justify-content: flex-start; } #nav-sidebar { width: 190px; flex-basis: 190px; } }
+    @media (max-width: 767px) { .admin-header-area #header { width: calc(100% - 28px); margin-top: 14px; padding: 12px 16px; } #content { padding: 16px 12px; } #header #user-tools { justify-content: flex-start; margin-left: 0; } #nav-sidebar { width: 190px; flex-basis: 190px; } }
     body[data-theme="dark"] { --admin-ink: #d8ebff; --admin-blue: #8fc1ff; --admin-line: #344357; --admin-bg: #111827; color: #e7edf5 !important; background: #111827 !important; }
     body[data-theme="dark"] .main, body[data-theme="dark"] main.content, body[data-theme="dark"] #content { background: #111827 !important; color: #e7edf5 !important; }
     body[data-theme="dark"] #content h1, body[data-theme="dark"] #content h2, body[data-theme="dark"] #content h3 { color: #d8ebff !important; }
@@ -119,16 +169,18 @@
     body[data-theme="dark"] .form-row label, body[data-theme="dark"] .aligned label, body[data-theme="dark"] .help, body[data-theme="dark"] p.help, body[data-theme="dark"] span.help, body[data-theme="dark"] form .help { color: #b9c9dc !important; }
     body[data-theme="dark"] input:not([type="submit"]):not([type="button"]), body[data-theme="dark"] select, body[data-theme="dark"] textarea { border-color: #52647a !important; background: #1c2736 !important; color: #e7edf5 !important; }
     body[data-theme="dark"] #changelist-filter a, body[data-theme="dark"] #content-main a, body[data-theme="dark"] #content-related .module a { color: #8fc1ff !important; }
-    body[data-theme="dark"] .admin-brand-copy small { color: #d5e6f7 !important; }
+    body[data-theme="dark"].app-auth.model-user #content-main .field-password .help { color: #c5d6e8 !important; }
+    body[data-theme="dark"] #content-main .object-tools a.historylink { border-color: #52647a; color: #e7edf5 !important; background: #253347; }
+    body[data-theme="dark"] #content-main .object-tools a.historylink:hover { background: #344b66; }
   </style>
 {% endblock %}
 
 {% block usertools %}
   {% if has_permission %}
     <div id="user-tools">
-      {% include "includes/preferences.html" with header_mode=True %}
-      {% if site_url %}<a href="{{ site_url }}">{% tr "View site" %}</a>{% endif %}
-      {% if user.has_usable_password %}<a href="{% url 'admin:password_change' %}">{% tr "Change password" %}</a>{% endif %}
+      {% include "includes/navbar_preferences.html" %}
+      {% if site_url %}<a class="admin-header-link" href="{{ site_url }}">{% tr "View site" %}</a>{% endif %}
+      {% if user.has_usable_password %}<a class="admin-header-link" href="{% url 'admin:password_change' %}">{% tr "Change password" %}</a>{% endif %}
       <span class="admin-user-chip"><span class="admin-user-avatar">{{ user.get_username|first|upper }}</span>{{ user.get_short_name|default:user.get_username }}</span>
       <form id="logout-form" method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button type="submit">{% tr "Log out" %}</button></form>
     </div>
@@ -137,6 +189,7 @@
 
 {% block extrabody %}
   {{ block.super }}
+  <script src="{% static 'core/admin_date_limits.js' %}"></script>
   <script>
     document.body.dataset.theme = "{{ site_theme }}";
     document.documentElement.style.colorScheme = "{{ site_theme }}";

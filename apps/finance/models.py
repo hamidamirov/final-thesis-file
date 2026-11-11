@@ -3,6 +3,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
+from apps.core.ui_text import ui_lazy
+
 
 def first_day_of_current_month():
     return timezone.localdate().replace(day=1)
@@ -161,8 +163,8 @@ class StudentOffer(models.Model):
 
 class Transaction(models.Model):
     class Type(models.TextChoices):
-        INCOME = "income", "Income"
-        EXPENSE = "expense", "Expense"
+        INCOME = "income", ui_lazy("Income")
+        EXPENSE = "expense", ui_lazy("Expense")
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

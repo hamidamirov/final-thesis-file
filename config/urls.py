@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
 
-from apps.core.views import database_health, home, save_preferences
+from apps.core.views import database_health, home, manage_admin_activity, save_preferences
 from apps.finance.views import (
     dashboard,
     monthly_report_csv,
@@ -15,6 +15,7 @@ from apps.finance.views import (
 )
 
 urlpatterns = [
+    path("admin/activity/", admin.site.admin_view(manage_admin_activity), name="manage_admin_activity"),
     path("admin/", admin.site.urls),
     path("accounts/login/", auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
     path(
