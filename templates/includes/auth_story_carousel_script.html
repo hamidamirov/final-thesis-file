@@ -1,0 +1,37 @@
+<script>
+  (() => {
+    const track = document.getElementById("story-track");
+    const carousel = track.closest(".story-carousel");
+    const dots = [...carousel.querySelectorAll(".carousel-dots button")];
+    let activeSlide = 0;
+    let autoplayTimer;
+    const showSlide = (index) => {
+      activeSlide = (index + dots.length) % dots.length;
+      track.style.transform = `translateX(-${activeSlide * 100}%)`;
+      dots.forEach((dot, dotIndex) => dot.setAttribute("aria-current", String(dotIndex === activeSlide)));
+    };
+    const updateAutoplay = () => {
+      window.clearInterval(autoplayTimer);
+      const canAutoplay = dots.length > 1 && !document.hidden
+        && !carousel.querySelector(":focus-visible");
+      track.setAttribute("aria-live", canAutoplay ? "off" : "polite");
+      if (canAutoplay) {
+        autoplayTimer = window.setInterval(() => showSlide(activeSlide + 1), 3000);
+      }
+    };
+    dots.forEach((dot) => dot.addEventListener("click", () => {
+      showSlide(Number(dot.dataset.slide));
+      updateAutoplay();
+    }));
+    carousel.addEventListener("focusin", updateAutoplay);
+    carousel.addEventListener("focusout", () => window.requestAnimationFrame(updateAutoplay));
+    document.addEventListener("visibilitychange", updateAutoplay);
+    updateAutoplay();
+    carousel.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      showSlide(activeSlide + (event.key === "ArrowRight" ? 1 : -1));
+      updateAutoplay();
+    });
+  })();
+</script>

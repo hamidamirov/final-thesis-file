@@ -47,7 +47,8 @@
     .auth-bottom-link { margin: 17px 0 0; color: #62758d; font-size: 13px; }
     .auth-bottom-link a { color: #2675bc; font-weight: 700; text-decoration: none; }
     .story-carousel { position: relative; z-index: 1; width: min(100%, 590px); overflow: hidden; }
-    .story-track { display: flex; width: 100%; transition: transform .5s cubic-bezier(.2,.75,.25,1); }
+    .story-track { display: flex; width: 100%; transition: transform .85s cubic-bezier(.2,.75,.25,1); }
+    @media (prefers-reduced-motion: reduce) { .story-track { transition: none; } }
     .story-slide { min-width: 100%; padding: 5px 8px 13px; color: #fff; text-align: center; }
     .story-slide .eyebrow { margin: 0 0 12px; color: #d8f8ff; font-size: 12px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
     .story-slide h2 { max-width: 540px; margin: 0 auto 9px; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.12; letter-spacing: -.8px; }
@@ -173,22 +174,7 @@
           : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
       });
     });
-    (() => {
-      const track = document.getElementById("story-track");
-      const dots = [...document.querySelectorAll(".carousel-dots button")];
-      let activeSlide = 0;
-      const showSlide = (index) => {
-        activeSlide = (index + dots.length) % dots.length;
-        track.style.transform = `translateX(-${activeSlide * 100}%)`;
-        dots.forEach((dot, dotIndex) => dot.setAttribute("aria-current", String(dotIndex === activeSlide)));
-      };
-      dots.forEach((dot) => dot.addEventListener("click", () => showSlide(Number(dot.dataset.slide))));
-      document.addEventListener("keydown", (event) => {
-        if (!event.target.closest(".story-carousel")) return;
-        if (event.key === "ArrowRight") showSlide(activeSlide + 1);
-        if (event.key === "ArrowLeft") showSlide(activeSlide - 1);
-      });
-    })();
   </script>
+  {% include "includes/auth_story_carousel_script.html" %}
 </body>
 </html>

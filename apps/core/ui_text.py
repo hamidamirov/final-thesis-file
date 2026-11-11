@@ -126,6 +126,9 @@ EXTRA_TRANSLATIONS["uk"].update({
 EXTRA_TRANSLATIONS["lt"]["Delete selected items"] = "Ištrinti pasirinktus įrašus"
 EXTRA_TRANSLATIONS["az"]["Delete selected items"] = "Seçilmişləri sil"
 EXTRA_TRANSLATIONS["uk"]["Delete selected items"] = "Видалити вибрані записи"
+EXTRA_TRANSLATIONS["lt"]["Support"] = "Pagalba"
+EXTRA_TRANSLATIONS["az"]["Support"] = "Dəstək"
+EXTRA_TRANSLATIONS["uk"]["Support"] = "Підтримка"
 
 
 def translate_ui(text, language="en", **values):

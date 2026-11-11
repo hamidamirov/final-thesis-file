@@ -10,6 +10,9 @@
     * { box-sizing: border-box; }
     body { display: flex; flex-direction: column; margin: 0; min-height: 100vh; overflow-x: clip; background: radial-gradient(ellipse at 12% 10%, #e7f0fb 0, transparent 34%), radial-gradient(ellipse at 88% 42%, #eef4fc 0, transparent 30%), #f7faff; }
     header { width: min(calc(100% - 64px), 1500px); min-height: 76px; margin: 22px auto 0; padding: 10px 28px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 22px; border: 1px solid #e7edf3; border-radius: 21px; background: #ffffffed; color: #173b67; box-shadow: 0 12px 32px #173b6712; backdrop-filter: blur(12px); }
+    .header-area { display: flow-root; }
+    body:not([data-theme="dark"]) .header-area { background: #fff; }
+    body:not([data-theme="dark"]) header { background: #fff; box-shadow: none; }
     .header-main, .header-tools { display: flex; align-items: center; }
     .header-main { gap: 12px; }
     .brand { display: inline-flex; align-items: center; gap: 12px; color: #173b67; font-size: 19px; font-weight: 700; text-decoration: none; white-space: nowrap; }
@@ -154,16 +157,21 @@
     .closing-cta { margin-top: 24px; padding: 30px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-radius: 16px; background: #e8eef4; }
     .closing-cta h2 { margin: 0 0 6px; color: #244461; font-size: 23px; }
     .closing-cta p { margin: 0; color: #5b6d80; line-height: 1.5; }
-    .site-footer { width: 100%; padding: 10px 32px 18px; border-top: 1px solid #e1e8f0; color: #294762; background: #f7faff; }
-    .footer-inner { width: min(100%, 1500px); min-height: 52px; margin: 0 auto; display: flex; align-items: center; gap: 18px; }
+    .site-footer { width: 100%; padding: 16px 32px; border-top: 1px solid #e1e8f0; color: #294762; background: #f7faff; }
+    .footer-inner { width: min(100%, 1500px); margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 22px; }
+    .footer-identity { display: flex; flex-wrap: wrap; align-items: center; gap: 6px clamp(18px, 3vw, 42px); min-width: 0; }
     .footer-brand { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 10px; color: #173b67; font-size: 18px; font-weight: 700; text-decoration: none; white-space: nowrap; }
     .footer-brand:visited { color: #173b67; }
     .footer-brand:hover { color: #1675d1; }
     .footer-brand img { width: 44px; height: 40px; border-radius: 8px; object-fit: cover; background: white; }
-    .footer-divider { width: 1px; height: 28px; flex: 0 0 1px; background: #cbd7e3; }
-    .footer-tagline { flex: 0 0 auto; margin: 0; color: #405c78; font-size: 15px; line-height: 1.5; white-space: nowrap; }
-    .footer-note { max-width: none; flex: 0 1 auto; margin: 0; color: #536b87; font-size: 15px; line-height: 1.45; white-space: nowrap; }
-    .footer-bottom { max-width: none; margin: 0 0 0 auto; padding: 0; border: 0; color: #63758a; font-size: 15px; white-space: nowrap; }
+    .footer-tagline, .footer-note { margin: 0; color: #536b87; font-size: 13px; line-height: 1.5; }
+    .footer-tagline { color: #405c78; font-weight: 600; }
+    .footer-support { display: grid; gap: 2px; width: min(100%, 290px); min-width: 0; padding: 8px 14px; border: 1px solid #dce7f3; border-radius: 10px; background: #eef5ff; color: #173b67; font-size: 14px; line-height: 1.4; text-decoration: none; overflow-wrap: anywhere; }
+    .footer-support strong { color: #405c78; font-size: 12px; }
+    .footer-support:hover { border-color: #9bb9da; background: #e5f0ff; }
+    .footer-support:hover span { text-decoration: underline; text-underline-offset: 3px; }
+    .footer-support:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    .footer-bottom { margin: 0; color: #536b87; font-size: 13px; line-height: 1.5; }
     body[data-theme="dark"] { color: #e7edf5; background: radial-gradient(ellipse at 12% 8%, #1b3655 0, transparent 34%), #111827; }
     body[data-theme="dark"] header { border-color: #344357; background: #1c2736ed; }
     body[data-theme="dark"] .brand, body[data-theme="dark"] .nav-links a, body[data-theme="dark"] .navbar-language select, body[data-theme="dark"] .navbar-theme button, body[data-theme="dark"] .header-login { color: #e7edf5; }
@@ -189,7 +197,9 @@
     body[data-theme="dark"] .site-footer { border-color: #344357; color: #d8e4ef; background: #172b40; }
     body[data-theme="dark"] .footer-brand, body[data-theme="dark"] .footer-brand:visited { color: #e7edf5; }
     body[data-theme="dark"] .footer-tagline, body[data-theme="dark"] .footer-note, body[data-theme="dark"] .footer-bottom { color: #c1d0de; }
-    body[data-theme="dark"] .footer-divider { background: #52647a; }
+    body[data-theme="dark"] .footer-support { color: #a9d2ff; border-color: #405a76; background: #203953; }
+    body[data-theme="dark"] .footer-support strong { color: #c1d0de; }
+    body[data-theme="dark"] .footer-support:hover { border-color: #759dc5; background: #284761; }
     body[data-theme="dark"] h1, body[data-theme="dark"] .feature h2 { color: #d8ebff; }
     body[data-theme="dark"] .intro, body[data-theme="dark"] .feature p { color: #b9c9dc; }
     body[data-theme="dark"] .feature-gallery-heading h2 { color: #d8ebff; }
@@ -206,38 +216,40 @@
     body[data-theme="dark"] .button.secondary { background: #253347; color: #d8ebff; border-color: #52647a; }
     @media (max-width: 1100px) { header { width: calc(100% - 40px); } }
     @media (max-width: 980px) { .hero { grid-template-columns: 1fr; gap: 34px; padding-top: 52px; padding-bottom: 52px; } .hero-copy { max-width: 700px; margin: 0 auto; } .budget-preview { width: min(100%, 700px); min-height: 0; justify-self: center; } }
-    @media (max-width: 760px) { header { width: calc(100% - 28px); margin-top: 14px; padding: 12px 16px; grid-template-columns: 1fr auto; gap: 12px; } .header-main { justify-content: flex-start; } .header-tools { flex-wrap: wrap; justify-content: flex-end; gap: 8px; } main { padding: 28px 16px 0; } .hero { grid-template-columns: 1fr; gap: 28px; padding: 36px 24px 30px; text-align: left; } .hero-copy { margin: 0 auto; } h1 { margin: 0; } .intro { margin: 18px 0 26px; } .actions { justify-content: flex-start; } .hero-phone { min-height: 390px; } .phone-frame { width: 225px; height: 380px; } .phone-float.one { left: 5%; } .phone-float.two { right: 4%; } .budget-preview { width: min(100%, 700px); justify-self: center; padding: 22px; } .steps { grid-template-columns: 1fr; } .closing-cta { align-items: flex-start; flex-direction: column; } .footer-inner { flex-direction: row; flex-wrap: wrap; gap: 12px 18px; } .footer-note { width: 100%; white-space: normal; } .footer-bottom { margin-left: auto; } }
+    @media (max-width: 760px) { header { width: calc(100% - 28px); margin-top: 14px; padding: 12px 16px; grid-template-columns: 1fr auto; gap: 12px; } .header-main { justify-content: flex-start; } .header-tools { flex-wrap: wrap; justify-content: flex-end; gap: 8px; } main { padding: 28px 16px 0; } .hero { grid-template-columns: 1fr; gap: 28px; padding: 36px 24px 30px; text-align: left; } .hero-copy { margin: 0 auto; } h1 { margin: 0; } .intro { margin: 18px 0 26px; } .actions { justify-content: flex-start; } .hero-phone { min-height: 390px; } .phone-frame { width: 225px; height: 380px; } .phone-float.one { left: 5%; } .phone-float.two { right: 4%; } .budget-preview { width: min(100%, 700px); justify-self: center; padding: 22px; } .steps { grid-template-columns: 1fr; } .closing-cta { align-items: flex-start; flex-direction: column; } }
     @media (max-width: 480px) { header { padding: 14px 16px; grid-template-columns: 1fr; } .header-main { flex-wrap: wrap; } .header-tools { justify-content: flex-start; } .header-login, .header-signup { padding: 9px 11px; font-size: 12px; } .brand { font-size: 16px; } .hero { padding: 26px 20px; } .about { padding: 24px 20px; } }
     @media (max-width: 760px) { main { padding: 0 16px; } .hero { width: 100vw; min-height: 0; left: 50%; grid-template-columns: 1fr; gap: 28px; margin-left: -50vw; padding: 38px 22px 30px; text-align: left; } .hero-copy { max-width: 700px; margin: 0 auto; } .budget-preview { width: min(100%, 700px); } }
     @media (max-width: 760px) { .feature-highlights { justify-content: center; } }
-    @media (max-width: 560px) { .budget-preview-content { grid-template-columns: 1fr; } .budget-chart-area { grid-row: 1; } .budget-donut { width: 132px; } .site-footer { padding: 14px 20px; } .footer-inner { justify-content: center; text-align: center; } .footer-divider { display: none; } .footer-tagline, .footer-note, .footer-bottom { width: 100%; margin: 0; justify-content: center; text-align: center; white-space: normal; } }
+    @media (max-width: 560px) { .budget-preview-content { grid-template-columns: 1fr; } .budget-chart-area { grid-row: 1; } .budget-donut { width: 132px; } .site-footer { padding: 16px 20px; } .footer-inner { flex-direction: column; text-align: center; } .footer-identity { flex: 0 1 auto; justify-content: center; } }
     @media (max-width: 480px) { .hero { padding: 30px 18px 24px; } .budget-preview { padding: 18px; border-radius: 19px; } .header-tools { justify-content: flex-end; } }
     @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } }
   </style>
 </head>
 <body data-theme="{{ site_theme }}">
-  <header>
-    <div class="header-main">
-      <a class="brand" href="#home" aria-label="{% tr 'Student Finance' %}"><span class="brand-logo"><img src="{% static 'core/student-finance-logo.jpg' %}" alt="{% tr 'Student Finance logo' %}"></span><span>{% tr "Student Finance" %}</span></a>
-    </div>
-    <div class="header-tools">
-      <form class="navbar-language" method="post" action="{% url 'save_preferences' %}">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <select name="language" aria-label="{% tr 'Language' %}" onchange="this.form.requestSubmit()">
-          {% for code, label in language_options %}<option value="{{ code }}" {% if site_language == code %}selected{% endif %}>{{ code|upper }}</option>{% endfor %}
-        </select>
-      </form>
-      <form class="navbar-theme" method="post" action="{% url 'save_preferences' %}">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <input type="hidden" name="language" value="{{ site_language }}">
-        <button type="submit" name="theme" value="{% if site_theme == 'dark' %}light{% else %}dark{% endif %}" title="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}" aria-label="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}">{% if site_theme == "dark" %}☀{% else %}☾{% endif %}</button>
-      </form>
-      <a class="header-login" href="{% url 'login' %}">{% tr "Log in" %}</a>
-      <a class="header-signup" href="{% url 'signup' %}">{% tr "Create your account" %}</a>
-    </div>
-  </header>
+  <div class="header-area">
+    <header>
+      <div class="header-main">
+        <a class="brand" href="#home" aria-label="{% tr 'Student Finance' %}"><span class="brand-logo"><img src="{% static 'core/student-finance-logo.jpg' %}" alt="{% tr 'Student Finance logo' %}"></span><span>{% tr "Student Finance" %}</span></a>
+      </div>
+      <div class="header-tools">
+        <form class="navbar-language" method="post" action="{% url 'save_preferences' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <select name="language" aria-label="{% tr 'Language' %}" onchange="this.form.requestSubmit()">
+            {% for code, label in language_options %}<option value="{{ code }}" {% if site_language == code %}selected{% endif %}>{{ code|upper }}</option>{% endfor %}
+          </select>
+        </form>
+        <form class="navbar-theme" method="post" action="{% url 'save_preferences' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <input type="hidden" name="language" value="{{ site_language }}">
+          <button type="submit" name="theme" value="{% if site_theme == 'dark' %}light{% else %}dark{% endif %}" title="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}" aria-label="{% if site_theme == 'dark' %}{% tr 'Switch to light mode' %}{% else %}{% tr 'Switch to dark mode' %}{% endif %}">{% if site_theme == "dark" %}☀{% else %}☾{% endif %}</button>
+        </form>
+        <a class="header-login" href="{% url 'login' %}">{% tr "Log in" %}</a>
+        <a class="header-signup" href="{% url 'signup' %}">{% tr "Create your account" %}</a>
+      </div>
+    </header>
+  </div>
   <main>
     <section class="hero" id="home">
       <div class="hero-copy">
@@ -283,10 +295,17 @@
   </main>
   <footer class="site-footer" id="about">
     <div class="footer-inner">
-      <a class="footer-brand" href="#home"><img src="{% static 'core/student-finance-logo.jpg' %}" alt="{% tr 'Student Finance logo' %}"><span>{% tr "Student Finance" %}</span></a>
-      <span class="footer-divider" aria-hidden="true"></span>
-      <p class="footer-tagline">{% tr "A simple finance companion for student life." %}</p>
-      <p class="footer-note">{% tr "Keep your student finances clear, organised, and in one place." %}</p>
+      <div class="footer-identity">
+        <a class="footer-brand" href="#home"><img src="{% static 'core/student-finance-logo.jpg' %}" alt="{% tr 'Student Finance logo' %}"><span>{% tr "Student Finance" %}</span></a>
+        <div>
+          <p class="footer-tagline">{% tr "A simple finance companion for student life." %}</p>
+          <p class="footer-note">{% tr "Keep your student finances clear, organised, and in one place." %}</p>
+        </div>
+      </div>
+      <a class="footer-support" href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=studentbudget.support%40gmail.com" target="_blank" rel="noopener noreferrer">
+        <strong>{% tr "Support" %}</strong>
+        <span>studentbudget.support@gmail.com</span>
+      </a>
       <p class="footer-bottom">© {% now "Y" %} {% tr "Student Finance" %} · {% tr "Made for student life." %}</p>
     </div>
   </footer>
