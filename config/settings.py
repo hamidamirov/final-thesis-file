@@ -1,4 +1,5 @@
 """Django settings for the student finance thesis project."""
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "axes",
     "apps.core",
     "apps.finance",
 ]
@@ -37,6 +39,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -93,6 +96,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_ENABLE_ACCESS_FAILURE_LOG = True
+AXES_DISABLE_ACCESS_LOG = False
+AXES_RESET_ON_SUCCESS = True
 
 EMAIL_BACKEND = env(
     "EMAIL_BACKEND",

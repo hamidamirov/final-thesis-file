@@ -41,7 +41,11 @@ def signup(request):
     form = RegistrationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        auth_login(request, user)
+        auth_login(
+            request,
+            user,
+            backend="django.contrib.auth.backends.ModelBackend",
+        )
         return redirect("home")
     return render(request, "registration/signup.html", {"form": form})
 
