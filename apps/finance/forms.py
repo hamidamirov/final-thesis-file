@@ -106,3 +106,16 @@ class RegistrationForm(UserCreationForm):
         if get_user_model().objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("An account with this email already exists.")
         return email
+
+
+class RegistrationCodeForm(forms.Form):
+    code = forms.RegexField(
+        regex=r"\A[0-9]{6}\Z",
+        label="Verification code",
+        min_length=6,
+        max_length=6,
+        error_messages={"invalid": "Enter the six-digit verification code."},
+        widget=forms.TextInput(
+            attrs={"inputmode": "numeric", "autocomplete": "one-time-code", "autofocus": True}
+        ),
+    )

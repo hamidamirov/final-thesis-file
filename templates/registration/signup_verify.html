@@ -1,0 +1,164 @@
+{% load l10n %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify your email | Student Finance</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; font-family: Arial, sans-serif; color: #173b67; background: #f7faff; }
+    main { width: min(100%, 440px); padding: clamp(20px, 6vw, 36px); border: 1px solid #dce7f4; border-radius: 18px; background: white; }
+    h1 { margin: 0; font-size: 28px; }
+    p { line-height: 1.5; color: #526982; overflow-wrap: anywhere; }
+    label { display: block; margin-bottom: 8px; font-weight: 700; }
+    input { width: 100%; padding: 12px; border: 1px solid #cbd9ea; border-radius: 9px; font: inherit; }
+    .code-boxes:not([hidden]) { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(4px, 1.5vw, 9px); }
+    .code-boxes input { min-width: 0; height: 52px; padding: 0; color: inherit; background: #fff; text-align: center; font-size: 22px; font-weight: 700; }
+    .code-boxes input:focus { outline: 2px solid #3989df; outline-offset: 1px; }
+    button { width: 100%; margin-top: 16px; padding: 12px; border: 0; border-radius: 9px; background: #1675d1; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover { background: #0f63b6; }
+    button:disabled { background: #63758a; cursor: default; }
+    .code-timer { margin-top: 16px; }
+    .code-timer p { display: flex; justify-content: space-between; margin: 0 0 6px; font-size: 14px; }
+    #verification-countdown { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .resend-form { margin-top: 12px; text-align: center; }
+    .resend-form button { width: auto; margin: 0; padding: 6px; color: #175b9f; background: transparent; text-decoration: underline; }
+    .resend-form button:hover { background: transparent; }
+    .resend-form button:disabled { color: #63758a; text-decoration: none; }
+    .resend-note { margin: 4px 0 0; font-size: 13px; }
+    .errorlist { color: #a1261f; padding-left: 20px; }
+    body[data-theme="dark"] { background: #111827; color: #e7edf5; }
+    body[data-theme="dark"] main { background: #1c2736; border-color: #344357; }
+    body[data-theme="dark"] p, body[data-theme="dark"] .resend-form button { color: #bed7f4; }
+    body[data-theme="dark"] .resend-form button:disabled { color: #a2adbd; }
+    body[data-theme="dark"] .code-boxes input { background: #111827; border-color: #52647a; }
+    body[data-theme="dark"] .errorlist { color: #ffb4ab; }
+  </style>
+</head>
+<body data-theme="{{ site_theme }}">
+  <main>
+    <h1>Verify your email</h1>
+    <p>Enter the six-digit code sent to <strong>{{ email }}</strong>. The code expires 2 minutes after you request it.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% if can_verify %}
+        {{ form.non_field_errors }}
+        <label id="verification-code-label" for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+        {{ form.code }}
+        <div class="code-boxes" id="verification-code-boxes" role="group" aria-labelledby="verification-code-label" hidden>
+          {% for digit in "123456" %}
+            <input type="text" inputmode="numeric" pattern="[0-9]" aria-label="Digit {{ digit }} of 6" {% if forloop.first %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %}>
+          {% endfor %}
+        </div>
+        {{ form.code.errors }}
+      {% endif %}
+      <div class="code-timer" id="verification-timer" data-remaining-ms="{{ remaining_ms|unlocalize }}" hidden>
+        <p><span>{% if is_blocked %}Lockout ends in{% else %}Time remaining{% endif %}</span> <span id="verification-countdown"></span></p>
+      </div>
+      <p id="verification-locked" role="status" {% if not is_blocked %}hidden{% endif %}>Too many incorrect codes. Wait until the lockout ends.</p>
+      <p id="verification-expired" role="status" {% if can_verify or is_blocked %}hidden{% endif %}>This code is no longer valid.</p>
+      <button type="submit" id="verification-submit" {% if not can_verify %}disabled{% endif %}>Verify and create account</button>
+    </form>
+    <form method="post" class="resend-form">
+      {% csrf_token %}
+      <button type="submit" id="verification-resend" name="action" value="resend" data-resends-left="{{ resends_left|unlocalize }}" {% if not can_resend %}disabled{% endif %}>Request a new code</button>
+      {% if resends_left %}
+        <p class="resend-note">New code requests left: {{ resends_left }}</p>
+      {% else %}
+        <p class="resend-note">You have reached the limit of three new codes.</p>
+      {% endif %}
+      {% if resend_error %}<p class="errorlist" role="alert">{{ resend_error }}</p>{% endif %}
+    </form>
+  </main>
+    <script>
+      (() => {
+        const timer = document.getElementById("verification-timer");
+        const countdown = document.getElementById("verification-countdown");
+        const resend = document.getElementById("verification-resend");
+        const expiresAt = performance.now() + Number(timer.dataset.remainingMs);
+
+        const updateTimer = () => {
+          const remaining = Math.max(0, expiresAt - performance.now());
+          const seconds = Math.ceil(remaining / 1000);
+          const minutesText = String(Math.floor(seconds / 60)).padStart(2, "0");
+          const secondsText = String(seconds % 60).padStart(2, "0");
+          countdown.textContent = minutesText + ":" + secondsText;
+          if (remaining === 0) {
+            window.clearInterval(timerInterval);
+            document.getElementById("verification-submit").disabled = true;
+            document.getElementById("verification-locked").hidden = true;
+            document.getElementById("verification-expired").hidden = false;
+            resend.disabled = Number(resend.dataset.resendsLeft) <= 0;
+          }
+        };
+        const timerInterval = window.setInterval(updateTimer, 200);
+        updateTimer();
+        timer.hidden = false;
+      })();
+    </script>
+
+  {% if can_verify %}
+    <script>
+      (() => {
+        const codeField = document.getElementById("{{ form.code.id_for_label }}");
+        const boxes = document.getElementById("verification-code-boxes");
+        const digits = Array.from(boxes.querySelectorAll("input"));
+
+        const syncCode = () => {
+          codeField.value = digits.map((input) => input.value).join("");
+        };
+
+        const fillDigits = (value, index) => {
+          const numbers = value.replace(/[^0-9]/g, "").slice(0, digits.length);
+          if (!numbers) {
+            digits[index].value = "";
+            syncCode();
+            return;
+          }
+          const start = numbers.length === digits.length ? 0 : index;
+          const end = Math.min(start + numbers.length, digits.length);
+          for (let position = start; position < end; position += 1) {
+            digits[position].value = numbers[position - start];
+          }
+          syncCode();
+          digits[Math.min(end, digits.length - 1)].focus();
+        };
+
+        digits.forEach((input, index) => {
+          input.required = true;
+          input.addEventListener("focus", () => input.select());
+          input.addEventListener("input", (event) => {
+            const value = event.inputType === "insertText" && event.data !== null
+              ? event.data
+              : input.value;
+            fillDigits(value, index);
+          });
+          input.addEventListener("paste", (event) => {
+            const value = event.clipboardData.getData("text");
+            event.preventDefault();
+            fillDigits(value, index);
+          });
+          input.addEventListener("keydown", (event) => {
+            if (event.key === "Backspace" && !input.value && index > 0) {
+              event.preventDefault();
+              digits[index - 1].value = "";
+              digits[index - 1].focus();
+              syncCode();
+            }
+          });
+        });
+
+        codeField.removeAttribute("autofocus");
+        codeField.type = "hidden";
+        document.getElementById("verification-code-label").htmlFor = "";
+        const description = codeField.getAttribute("aria-describedby");
+        if (description) boxes.setAttribute("aria-describedby", description);
+        syncCode();
+        boxes.hidden = false;
+        digits[0].focus();
+      })();
+    </script>
+  {% endif %}
+</body>
+</html>

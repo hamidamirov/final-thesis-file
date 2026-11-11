@@ -9,6 +9,7 @@ from apps.finance.views import (
     dashboard,
     monthly_report_csv,
     signup,
+    signup_verify,
     transaction_delete,
     transaction_edit,
 )
@@ -49,6 +50,7 @@ urlpatterns = [
         name="password_reset_complete",
     ),
     path("accounts/signup/", signup, name="signup"),
+    path("accounts/signup/verify/", signup_verify, name="signup_verify"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", dashboard, name="dashboard"),
     path("transactions/<int:pk>/edit/", transaction_edit, name="transaction_edit"),

@@ -8,6 +8,19 @@ def first_day_of_current_month():
     return timezone.localdate().replace(day=1)
 
 
+class PendingRegistration(models.Model):
+    ATTEMPT_LIMIT = 4
+
+    username = models.CharField(max_length=150)
+    email = models.EmailField(unique=True)
+    password_hash = models.CharField(max_length=128)
+    code_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField(db_index=True)
+    attempts_left = models.PositiveSmallIntegerField(default=ATTEMPT_LIMIT)
+    blocked_until = models.DateTimeField(null=True, blank=True)
+    resend_count = models.PositiveSmallIntegerField(default=0)
+
+
 class Budget(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

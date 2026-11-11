@@ -1,15 +1,20 @@
 import csv
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
+from secrets import randbelow
 
 from django.contrib import messages
-from django.contrib.auth import login as auth_login, update_session_auth_hash
+from django.contrib.auth import get_user_model, login as auth_login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.hashers import check_password, make_password
+from django.core.mail import get_connection, send_mail
+from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 
 from apps.core.ui_text import translate_ui
 
@@ -17,6 +22,7 @@ from .forms import (
     AccountDetailsForm,
     BudgetForm,
     GoalContributionForm,
+    RegistrationCodeForm,
     RegistrationForm,
     SavingsGoalForm,
     StudentProfileForm,
@@ -25,6 +31,7 @@ from .forms import (
 from .models import (
     Budget,
     FinancialTip,
+    PendingRegistration,
     SavingChallenge,
     SavingsGoal,
     StudentProfile,
@@ -35,19 +42,178 @@ from .models import (
 )
 
 
+REGISTRATION_CODE_LIFETIME = timedelta(minutes=2)
+REGISTRATION_LOCKOUT = timedelta(minutes=15)
+REGISTRATION_RESEND_LIMIT = 3
+
+
+def _send_registration_code(email, code):
+    try:
+        return send_mail(
+            "Verify your StudentBudget email",
+            f"Your StudentBudget verification code is {code}.\n\n"
+            "It expires in 2 minutes. If you did not request this, ignore this email.",
+            None,
+            [email],
+            connection=get_connection(timeout=15),
+        )
+    except OSError:
+        return 0
+
+
+@transaction.atomic
+def _resend_registration_code(pending_id):
+    pending = PendingRegistration.objects.select_for_update().filter(pk=pending_id).first()
+    if pending is None:
+        return "This registration session has expired."
+
+    now = timezone.now()
+    if pending.blocked_until and pending.blocked_until > now:
+        return "Too many incorrect codes. Wait until the lockout ends."
+    if pending.expires_at > now:
+        return "Wait for the current code to expire before requesting another."
+    if pending.resend_count >= REGISTRATION_RESEND_LIMIT:
+        return "You have reached the limit of three new codes."
+
+    code = f"{randbelow(1_000_000):06d}"
+    while check_password(code, pending.code_hash):
+        code = f"{randbelow(1_000_000):06d}"
+    code_hash = make_password(code)
+    if not _send_registration_code(pending.email, code):
+        return "The new code could not be sent. Please try again."
+
+    pending.code_hash = code_hash
+    pending.expires_at = timezone.now() + REGISTRATION_CODE_LIFETIME
+    pending.resend_count += 1
+    if pending.blocked_until is not None:
+        pending.attempts_left = PendingRegistration.ATTEMPT_LIMIT
+        pending.blocked_until = None
+    pending.save(update_fields=["code_hash", "expires_at", "resend_count", "attempts_left", "blocked_until"])
+    return None
+
+
 def signup(request):
     if request.user.is_authenticated:
         return redirect("home")
     form = RegistrationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        user = form.save()
-        auth_login(
-            request,
-            user,
-            backend="django.contrib.auth.backends.ModelBackend",
-        )
-        return redirect("home")
+        user = form.save(commit=False)
+        now = timezone.now()
+        cleanup_before = now - REGISTRATION_LOCKOUT
+        PendingRegistration.objects.filter(expires_at__lte=cleanup_before).filter(
+            Q(blocked_until__isnull=True) | Q(blocked_until__lte=cleanup_before)
+        ).delete()
+        code = f"{randbelow(1_000_000):06d}"
+        try:
+            pending, created = PendingRegistration.objects.get_or_create(
+                email=user.email,
+                defaults={
+                    "username": user.username,
+                    "password_hash": user.password,
+                    "code_hash": make_password(code),
+                    "expires_at": now + REGISTRATION_CODE_LIFETIME,
+                },
+            )
+        except IntegrityError:
+            form.add_error(None, "Registration could not be started. Please try again.")
+        else:
+            if not created:
+                if request.session.get("pending_registration_id") == pending.pk:
+                    return redirect("signup_verify")
+                if pending.blocked_until and pending.blocked_until > now:
+                    form.add_error("email", "Too many incorrect codes. Request a new code after the 15-minute lockout.")
+                else:
+                    form.add_error("email", "A registration is already in progress. Use the original verification page or try again later.")
+            else:
+                if _send_registration_code(pending.email, code):
+                    request.session["pending_registration_id"] = pending.pk
+                    return redirect("signup_verify")
+                pending.delete()
+                form.add_error(None, "The verification email could not be sent. Please try again.")
     return render(request, "registration/signup.html", {"form": form})
+
+
+@never_cache
+def signup_verify(request):
+    if request.user.is_authenticated:
+        return redirect("home")
+
+    pending_id = request.session.get("pending_registration_id")
+    pending = PendingRegistration.objects.filter(pk=pending_id).first()
+    if pending is None:
+        request.session.pop("pending_registration_id", None)
+        return redirect("signup")
+
+    is_resend = request.method == "POST" and request.POST.get("action") == "resend"
+    resend_error = None
+    if is_resend:
+        resend_error = _resend_registration_code(pending_id)
+        if resend_error is None:
+            return redirect("signup_verify")
+        pending = PendingRegistration.objects.filter(pk=pending_id).first()
+        if pending is None:
+            return redirect("signup")
+
+    form = RegistrationCodeForm(request.POST if request.method == "POST" and not is_resend else None)
+    user = None
+    if request.method == "POST" and not is_resend and form.is_valid():
+        user_model = get_user_model()
+        try:
+            with transaction.atomic():
+                pending = PendingRegistration.objects.select_for_update().filter(pk=pending_id).first()
+                if pending is None:
+                    return redirect("signup")
+                now = timezone.now()
+                if pending.expires_at <= now or not pending.attempts_left:
+                    form.add_error("code", "This code is no longer valid.")
+                elif not check_password(form.cleaned_data["code"], pending.code_hash):
+                    pending.attempts_left -= 1
+                    if pending.attempts_left == 0:
+                        pending.blocked_until = now + REGISTRATION_LOCKOUT
+                    pending.save(update_fields=["attempts_left", "blocked_until"])
+                    form.add_error("code", "The verification code is incorrect.")
+                elif user_model.objects.filter(
+                    Q(username=pending.username) | Q(email__iexact=pending.email)
+                ).exists():
+                    pending.delete()
+                    request.session.pop("pending_registration_id", None)
+                    return redirect("signup")
+                else:
+                    user = user_model.objects.create(
+                        username=pending.username,
+                        email=pending.email,
+                        password=pending.password_hash,
+                    )
+                    pending.delete()
+        except IntegrityError:
+            user = None
+            form.add_error(None, "The account could not be created. Start registration again.")
+
+    if user is not None:
+        request.session.pop("pending_registration_id", None)
+        auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        return redirect("home")
+
+    now = timezone.now()
+    is_blocked = pending.blocked_until is not None and pending.blocked_until > now
+    available_at = pending.blocked_until if is_blocked else pending.expires_at
+    return render(
+        request,
+        "registration/signup_verify.html",
+        {
+            "form": form,
+            "email": pending.email,
+            "can_verify": pending.expires_at > now and pending.attempts_left > 0,
+            "is_blocked": is_blocked,
+            "remaining_ms": max(0, int((available_at - now).total_seconds() * 1000)),
+            "resends_left": REGISTRATION_RESEND_LIMIT - pending.resend_count,
+            "can_resend": (
+                not is_blocked and pending.expires_at <= now
+                and pending.resend_count < REGISTRATION_RESEND_LIMIT
+            ),
+            "resend_error": resend_error,
+        },
+    )
 
 
 @login_required
