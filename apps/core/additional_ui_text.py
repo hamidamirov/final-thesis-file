@@ -1,5 +1,62 @@
 # Each entry lists the Lithuanian, Azerbaijani, and Ukrainian translations.
 ADDITIONAL_UI_TEXT = {
+    "Profile details": ("Profilio duomenys", "Profil məlumatları", "Дані профілю"),
+    "Edit savings goal": ("Redaguoti taupymo tikslą", "Yığım məqsədinə düzəliş et", "Редагувати ціль заощадження"),
+    "Delete savings goal?": ("Ištrinti taupymo tikslą?", "Yığım məqsədi silinsin?", "Видалити ціль заощадження?"),
+    "Edit goal: {name}": ("Redaguoti tikslą „{name}“", "«{name}» məqsədinə düzəliş et", "Редагувати ціль «{name}»"),
+    "Delete goal: {name}": ("Ištrinti tikslą „{name}“", "«{name}» məqsədini sil", "Видалити ціль «{name}»"),
+    "This goal and its recorded savings will be permanently deleted.": (
+        "Šis tikslas ir jam užregistruotos santaupos bus ištrinti visam laikui.",
+        "Bu məqsəd və ona aid yığım qeydi həmişəlik silinəcək.",
+        "Цю ціль і записані для неї заощадження буде видалено назавжди.",
+    ),
+    "Savings goal updated successfully.": (
+        "Taupymo tikslas atnaujintas.", "Yığım məqsədi yeniləndi.", "Ціль заощадження оновлено.",
+    ),
+    "Savings goal deleted successfully.": (
+        "Taupymo tikslas ištrintas.", "Yığım məqsədi silindi.", "Ціль заощадження видалено.",
+    ),
+    "Delete monthly budget?": ("Ištrinti mėnesio biudžetą?", "Aylıq büdcə silinsin?", "Видалити місячний бюджет?"),
+    "Delete budget: {category}": ("Ištrinti biudžetą „{category}“", "«{category}» büdcəsini sil", "Видалити бюджет «{category}»"),
+    "Your transactions in this category will be kept.": (
+        "Šios kategorijos operacijos bus išsaugotos.",
+        "Bu kateqoriyadakı əməliyyatlar saxlanacaq.",
+        "Транзакції в цій категорії буде збережено.",
+    ),
+    "Monthly budget deleted successfully.": (
+        "Mėnesio biudžetas sėkmingai ištrintas.",
+        "Aylıq büdcə silindi.",
+        "Місячний бюджет успішно видалено.",
+    ),
+    "This transaction will be permanently deleted.": (
+        "Ši operacija bus ištrinta visam laikui.",
+        "Bu əməliyyat həmişəlik silinəcək.",
+        "Цю операцію буде видалено назавжди.",
+    ),
+    "Password-based authentication": ("Prisijungimas slaptažodžiu", "Şifrə ilə giriş", "Вхід за паролем"),
+    "Enabled": ("Įjungta", "Aktivdir", "Увімкнено"),
+    "Disabled": ("Išjungta", "Deaktivdir", "Вимкнено"),
+    "Controls whether this user can sign in with a password.": (
+        "Nustato, ar naudotojas gali prisijungti slaptažodžiu.",
+        "İstifadəçinin şifrə ilə daxil olub-olmayacağını müəyyən edir.",
+        "Визначає, чи може користувач увійти за паролем.",
+    ),
+    "Disabling password sign-in will remove this user's current password.": (
+        "Išjungus prisijungimą slaptažodžiu, dabartinis naudotojo slaptažodis bus pašalintas.",
+        "Şifrə ilə giriş söndürüldükdə istifadəçinin cari şifrəsi silinəcək.",
+        "Вимкнення входу за паролем видалить поточний пароль користувача.",
+    ),
+    "Setting a password will allow this user to sign in with it.": (
+        "Nustačius slaptažodį, naudotojas galės juo prisijungti.",
+        "Şifrə təyin edildikdə istifadəçi həmin şifrə ilə daxil ola biləcək.",
+        "Після встановлення пароля користувач зможе увійти за ним.",
+    ),
+    "Disable password-based authentication": (
+        "Išjungti prisijungimą slaptažodžiu", "Şifrə ilə girişi söndür", "Вимкнути вхід за паролем",
+    ),
+    "Enable password-based authentication": (
+        "Įjungti prisijungimą slaptažodžiu", "Şifrə ilə girişi aktiv et", "Увімкнути вхід за паролем",
+    ),
     "Recent actions": ("Paskutiniai veiksmai", "Son əməliyyatlar", "Останні дії"),
     "None available": ("Veiksmų nėra", "Əməliyyat yoxdur", "Дій немає"),
     "Added:": ("Pridėta:", "Əlavə olunub:", "Додано:"),

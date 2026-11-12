@@ -6,8 +6,11 @@ from django.urls import path
 
 from apps.core.views import database_health, home, manage_admin_activity, save_preferences
 from apps.finance.views import (
+    budget_delete,
     dashboard,
     monthly_report_csv,
+    savings_goal_delete,
+    savings_goal_edit,
     signup,
     signup_verify,
     transaction_delete,
@@ -54,6 +57,9 @@ urlpatterns = [
     path("accounts/signup/verify/", signup_verify, name="signup_verify"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("dashboard/", dashboard, name="dashboard"),
+    path("budgets/<int:pk>/delete/", budget_delete, name="budget_delete"),
+    path("savings-goals/<int:pk>/edit/", savings_goal_edit, name="savings_goal_edit"),
+    path("savings-goals/<int:pk>/delete/", savings_goal_delete, name="savings_goal_delete"),
     path("transactions/<int:pk>/edit/", transaction_edit, name="transaction_edit"),
     path("transactions/<int:pk>/delete/", transaction_delete, name="transaction_delete"),
     path("reports/monthly.csv", monthly_report_csv, name="monthly_report_csv"),

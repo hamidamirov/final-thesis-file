@@ -1,0 +1,18 @@
+{% extends "finance/transaction_action.html" %}
+{% load ui %}
+
+{% block page_title %}{% tr "Delete savings goal?" %}{% endblock %}
+{% block heading %}{% tr "Delete savings goal?" %}{% endblock %}
+
+{% block content %}
+  <p class="delete-description">{% tr "This goal and its recorded savings will be permanently deleted." %}</p>
+  <dl class="transaction-details">
+    <div><dt>{% tr "Name" %}</dt><dd>{{ goal.name }}</dd></div>
+    <div><dt>{% tr "Saved" %}</dt><dd>{{ goal.saved_amount|floatformat:2 }}</dd></div>
+  </dl>
+  <form method="post" class="transaction-actions">
+    {% csrf_token %}
+    <a class="transaction-button transaction-cancel" href="{% url 'dashboard' %}#savings-goals">{% tr "Cancel" %}</a>
+    <button class="transaction-button transaction-delete" type="submit">{% tr "Delete" %}</button>
+  </form>
+{% endblock %}

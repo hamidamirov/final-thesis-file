@@ -13,6 +13,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 
@@ -284,6 +285,7 @@ def dashboard(request):
         return redirect("home")
 
     form_type = request.POST.get("form_type") if request.method == "POST" else ""
+    contribution_goal_id = None
     if form_type == "budget":
         form = TransactionForm(language=language)
         budget_form = BudgetForm(request.POST)
@@ -296,7 +298,7 @@ def dashboard(request):
                 defaults={"amount": budget.amount},
             )
             messages.success(request, translate_ui("Monthly budget saved successfully.", language))
-            return redirect("home")
+            return redirect(f"{reverse('dashboard')}#monthly-budgets")
     elif form_type == "savings_goal":
         form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
@@ -306,15 +308,16 @@ def dashboard(request):
             goal.user = request.user
             goal.save()
             messages.success(request, translate_ui("Savings goal created successfully.", language))
-            return redirect("home")
+            return redirect(f"{reverse('dashboard')}#savings-goals")
     elif form_type == "goal_contribution":
         form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
-        contribution_form = GoalContributionForm(request.POST)
         goal = get_object_or_404(
             SavingsGoal, pk=request.POST.get("goal_id"), user=request.user
         )
+        contribution_goal_id = goal.pk
+        contribution_form = GoalContributionForm(request.POST, auto_id=f"id_goal_{goal.pk}_%s")
         if contribution_form.is_valid():
             goal.saved_amount += contribution_form.cleaned_data["amount"]
             goal.save(update_fields=["saved_amount"])
@@ -322,7 +325,7 @@ def dashboard(request):
                 request,
                 translate_ui("Progress updated for {name}.", language, name=goal.name),
             )
-            return redirect("home")
+            return redirect(f"{reverse('dashboard')}#savings-goals")
     elif form_type == "transaction":
         form = TransactionForm(request.POST, language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
@@ -340,8 +343,6 @@ def dashboard(request):
 
     if "goal_form" not in locals():
         goal_form = SavingsGoalForm()
-    if "contribution_form" not in locals():
-        contribution_form = GoalContributionForm()
 
     user_transactions = Transaction.objects.filter(user=request.user)
     transaction_list = user_transactions
@@ -381,9 +382,15 @@ def dashboard(request):
             or Decimal("0.00")
         )
         budget.remaining = budget.amount - budget.spent
+        budget.spent_percent = round(budget.spent / budget.amount * 100) if budget.amount > 0 else 0
+        budget.progress_percent = min(100, max(0, budget.spent_percent))
 
     savings_goals = SavingsGoal.objects.filter(user=request.user)
     for goal in savings_goals:
+        goal.contribution_form = (
+            contribution_form if goal.pk == contribution_goal_id
+            else GoalContributionForm(auto_id=f"id_goal_{goal.pk}_%s")
+        )
         goal.progress_percent = min(
             100, round(float(goal.saved_amount / goal.target_amount * 100))
         )
@@ -467,7 +474,7 @@ def dashboard(request):
             "budget_form": budget_form,
             "budgets": budgets,
             "goal_form": goal_form,
-            "contribution_form": contribution_form,
+            "contribution_goal_id": contribution_goal_id,
             "savings_goals": savings_goals,
             "financial_tips": financial_tips,
             "student_offers": available_offers,
@@ -537,6 +544,58 @@ def monthly_report_csv(request):
             ]
         )
     return response
+
+
+@login_required
+def budget_delete(request, pk):
+    budget = get_object_or_404(Budget, pk=pk, user=request.user)
+    if request.method == "POST":
+        budget.delete()
+        messages.success(
+            request,
+            translate_ui(
+                "Monthly budget deleted successfully.",
+                request.session.get("site_language", "en"),
+            ),
+        )
+        return redirect(f"{reverse('dashboard')}#monthly-budgets")
+    return render(request, "finance/budget_confirm_delete.html", {"budget": budget})
+
+
+@login_required
+def savings_goal_edit(request, pk):
+    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
+    return_url = f"{reverse('dashboard')}#savings-goals"
+    form = SavingsGoalForm(
+        request.POST if request.method == "POST" else None, instance=goal
+    )
+    if request.method == "POST" and form.is_valid():
+        goal = form.save(commit=False)
+        goal.save(update_fields=form.changed_data)
+        messages.success(
+            request,
+            translate_ui("Savings goal updated successfully.", request.session.get("site_language", "en")),
+        )
+        return redirect(return_url)
+    return render(request, "finance/transaction_form.html", {
+        "form": form,
+        "title": "Edit savings goal",
+        "button_label": "Save changes",
+        "return_url": return_url,
+    })
+
+
+@login_required
+def savings_goal_delete(request, pk):
+    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
+    if request.method == "POST":
+        goal.delete()
+        messages.success(
+            request,
+            translate_ui("Savings goal deleted successfully.", request.session.get("site_language", "en")),
+        )
+        return redirect(f"{reverse('dashboard')}#savings-goals")
+    return render(request, "finance/savings_goal_confirm_delete.html", {"goal": goal})
 
 
 @login_required

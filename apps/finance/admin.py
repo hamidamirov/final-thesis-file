@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin as DjangoUserAdmin
+from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.contrib.auth.models import Group, User
 
 from apps.core.date_fields import PastOrTodayDatesAdmin
@@ -55,7 +56,18 @@ class StudentGroupAdmin(LocalizedPermissionsAdmin, GroupAdmin):
     pass
 
 
+class StudentAdminPasswordChangeForm(AdminPasswordChangeForm):
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(user, *args, **kwargs)
+        if "usable_password" in self.fields:
+            field = self.fields["usable_password"]
+            field.label = ui_lazy("Password-based authentication")
+            field.choices = [("true", ui_lazy("Enabled")), ("false", ui_lazy("Disabled"))]
+            field.help_text = ui_lazy("Controls whether this user can sign in with a password.")
+
+
 class StudentUserAdmin(PastOrTodayDatesAdmin, LocalizedPermissionsAdmin, DjangoUserAdmin):
+    change_password_form = StudentAdminPasswordChangeForm
     list_display = ("username", "email", "first_name", "last_name", "is_staff", "date_joined")
     list_filter = ("is_staff", "is_active", "date_joined")
     search_fields = ("username", "email", "first_name", "last_name")

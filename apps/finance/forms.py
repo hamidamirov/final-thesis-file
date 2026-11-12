@@ -70,7 +70,7 @@ class SavingsGoalForm(forms.ModelForm):
     class Meta:
         model = SavingsGoal
         fields = ["name", "target_amount", "target_date"]
-        widgets = {"target_date": forms.DateInput(attrs={"type": "date"})}
+        widgets = {"target_date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})}
 
 
 class GoalContributionForm(forms.Form):

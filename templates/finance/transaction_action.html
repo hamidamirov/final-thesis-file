@@ -1,0 +1,107 @@
+{% load ui %}
+<!doctype html>
+<html lang="{{ site_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block page_title %}{% endblock %} | {% tr "Student Finance" %}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      --surface: #fff;
+      --soft: #f4f8fd;
+      --line: #d5e2f1;
+      --ink: #172b45;
+      --muted: #526982;
+      --focus: #3989df;
+      --control: #e9f1fb;
+      --control-hover: #dbe9f8;
+      --primary: #165fa9;
+      --primary-hover: #104f90;
+      --danger: #a4333e;
+      --danger-hover: #872731;
+      --error: #b42318;
+      color-scheme: light;
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(16px, 4vw, 40px);
+      display: grid;
+      place-items: center;
+      background: #eef4fc;
+      color: var(--ink);
+      font-family: Arial, sans-serif;
+    }
+    body[data-theme="dark"] {
+      --surface: #1c2736;
+      --soft: #152030;
+      --line: #40536c;
+      --ink: #e7edf5;
+      --muted: #b9c9dc;
+      --focus: #8fc1ff;
+      --control: #263b53;
+      --control-hover: #344e6b;
+      --primary: #21588b;
+      --primary-hover: #2c669e;
+      --danger: #9a3e48;
+      --danger-hover: #b14d58;
+      --error: #ffbaba;
+      color-scheme: dark;
+      background: #111827;
+    }
+    .transaction-card {
+      width: min(100%, 540px);
+      padding: clamp(20px, 5vw, 34px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 12px 32px #173b6712;
+    }
+    .transaction-topbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+    .header-preferences { display: inline-flex; align-items: center; gap: 8px; }
+    .header-language-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+    .header-language-switch button { min-width: 32px; padding: 6px; border: 1px solid transparent; border-radius: 999px; color: var(--muted); background: transparent; font: 700 11px Arial, sans-serif; cursor: pointer; }
+    .header-language-switch button[aria-current="true"] { border-color: var(--focus); color: var(--ink); background: var(--control); }
+    .header-theme-toggle button { display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--ink); background: var(--control); font: 21px/1 Arial, sans-serif; cursor: pointer; }
+    .header-theme-toggle button:hover { background: var(--control-hover); }
+    h1 { margin: 0 0 20px; font-size: clamp(22px, 5vw, 28px); line-height: 1.2; }
+    .delete-description { margin: -8px 0 18px; color: var(--muted); line-height: 1.5; }
+    .transaction-fields { display: grid; gap: 13px; }
+    .transaction-fields label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 700; }
+    .transaction-fields input, .transaction-fields select {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--soft);
+      font: inherit;
+      font-size: 14px;
+    }
+    .transaction-fields .field { min-width: 0; }
+    .errorlist { margin: 6px 0 0; padding-inline-start: 18px; color: var(--error); font-size: 13px; }
+    .transaction-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+    .transaction-details dt { margin-bottom: 5px; color: var(--muted); font-size: 13px; }
+    .transaction-details dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+    .transaction-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .transaction-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 9px 15px; border: 1px solid transparent; border-radius: 8px; font: 700 14px/1.3 Arial, sans-serif; text-decoration: none; cursor: pointer; }
+    .transaction-cancel { border-color: var(--line); color: var(--ink); background: var(--control); }
+    .transaction-cancel:hover { background: var(--control-hover); }
+    .transaction-save { color: #fff; background: var(--primary); }
+    .transaction-save:hover { background: var(--primary-hover); }
+    .transaction-delete { color: #fff; background: var(--danger); }
+    .transaction-delete:hover { background: var(--danger-hover); }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  </style>
+</head>
+<body data-theme="{{ site_theme }}">
+  <main class="transaction-card" aria-labelledby="transaction-title">
+    <div class="transaction-topbar">
+      {% include "includes/preferences.html" with header_mode=True language_only=False %}
+    </div>
+    <h1 id="transaction-title">{% block heading %}{% endblock %}</h1>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

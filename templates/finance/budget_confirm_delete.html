@@ -1,0 +1,19 @@
+{% extends "finance/transaction_action.html" %}
+{% load ui %}
+
+{% block page_title %}{% tr "Delete monthly budget?" %}{% endblock %}
+{% block heading %}{% tr "Delete monthly budget?" %}{% endblock %}
+
+{% block content %}
+  <p class="delete-description">{% tr "Your transactions in this category will be kept." %}</p>
+  <dl class="transaction-details">
+    <div><dt>{% tr "Category" %}</dt><dd>{{ budget.category|translate:site_language }}</dd></div>
+    <div><dt>{% tr "Budget" %}</dt><dd>{{ budget.amount|floatformat:2 }}</dd></div>
+    <div><dt>{% tr "Month" %}</dt><dd><time datetime="{{ budget.month|date:'Y-m' }}">{{ budget.month|date:"F Y" }}</time></dd></div>
+  </dl>
+  <form method="post" class="transaction-actions">
+    {% csrf_token %}
+    <a class="transaction-button transaction-cancel" href="{% url 'dashboard' %}#monthly-budgets">{% tr "Cancel" %}</a>
+    <button class="transaction-button transaction-delete" type="submit">{% tr "Delete" %}</button>
+  </form>
+{% endblock %}
