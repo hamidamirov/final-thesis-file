@@ -174,7 +174,7 @@
           <p class="form-intro">{% tr "Log in to manage your transactions." %}</p>
           <form method="post" class="login-form">{% csrf_token %}
             {{ form.non_field_errors }}
-            <label for="id_username">{% tr "Username" %}</label>{{ form.username }}
+            <label for="id_username">{% tr "Username or email" %}</label>{{ form.username }}
             <label for="id_password">{% tr "Password" %}</label>
             <div class="password-field">
               {{ form.password }}

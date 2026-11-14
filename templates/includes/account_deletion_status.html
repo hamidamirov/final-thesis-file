@@ -1,0 +1,25 @@
+{% load ui %}
+
+{% if deletion_request %}
+  <p class="deletion-status">
+    <strong class="deletion-status-label deletion-status-{{ deletion_request.status }}">{{ deletion_request.get_status_display }}</strong>
+    {{ deletion_request.decided_at|default:deletion_request.requested_at|date:"SHORT_DATETIME_FORMAT" }}
+  </p>
+  {% if deletion_request.status == "declined" %}
+    <p>{% tr "The administrator declined your account deletion request." %}</p>
+  {% endif %}
+{% endif %}
+<div class="finance-card-actions">
+  <a class="finance-edit" href="{% url 'request_account_deletion' %}">
+    {% if deletion_request.status == "pending" %}{% tr "View deletion request" %}
+    {% elif deletion_request %}{% tr "Create a new request" %}
+    {% else %}{% tr "Request account deletion" %}{% endif %}
+  </a>
+  {% if deletion_request.status == "declined" or deletion_request.status == "cancelled" %}
+    <form method="post" action="{% url 'request_account_deletion' %}">
+      {% csrf_token %}
+      <input type="hidden" name="request_id" value="{{ deletion_request.pk|slugify }}">
+      <button class="finance-delete" type="submit" name="action" value="remove">{% tr "Remove old request" %}</button>
+    </form>
+  {% endif %}
+</div>

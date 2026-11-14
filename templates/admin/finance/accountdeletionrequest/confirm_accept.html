@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static ui %}
+
+{% block bodyclass %}{{ block.super }} delete-confirmation{% endblock %}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'core/admin_delete.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate "Home" %}</a> ›
+    <a href="{% url 'admin:finance_accountdeletionrequest_changelist' %}">{% tr "Account deletion requests" %}</a> ›
+    <a href="{{ change_url }}">{{ entry.username }}</a> › {{ title }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="admin-delete-panel">
+    <p>{% tr "Permanently delete this account and its financial records?" %}</p>
+    <ul>
+      <li>{% tr "User" %} · <strong>{{ entry.username }}</strong></li>
+    </ul>
+    <form method="post" action="{% url 'admin:finance_accountdeletionrequest_review' entry.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="decision" value="accept">
+      <input type="hidden" name="confirm" value="yes">
+      <div>
+        <input type="submit" value="{% translate 'Yes, I’m sure' %}">
+        <a class="button cancel-link" href="{{ change_url }}">{% translate "No, take me back" %}</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

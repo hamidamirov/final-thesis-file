@@ -1,0 +1,4 @@
+.code-boxes:not([hidden]) { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(4px, 1.5vw, 9px); }
+.code-boxes input[type="text"] { min-width: 0; height: 52px; padding: 0; color: inherit; background: #fff; text-align: center; font-size: 22px; font-weight: 700; }
+.code-boxes input[type="text"]:focus { outline: 2px solid #3989df; outline-offset: 1px; }
+body[data-theme="dark"] .code-boxes input[type="text"] { background: #111827; border-color: #52647a; }

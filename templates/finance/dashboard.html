@@ -61,7 +61,12 @@
     .budget-over .finance-percent { background: #fff0f0; color: #a4333e; }
     .budget-over .finance-track, .budget-over .budget-remaining { color: #a4333e; }
     .finance-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .finance-card-actions a { display: inline-flex; align-items: center; min-height: 32px; padding: 5px 9px; border-radius: 7px; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .finance-card-actions :is(a, button) { display: inline-flex; align-items: center; min-height: 32px; padding: 5px 9px; border-radius: 7px; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .deletion-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .deletion-status-label { padding: 5px 9px; border-radius: 7px; background: #e7eff9; color: #173b67; }
+    .deletion-status-declined { background: #fff0f0; color: #922e38; }
+    body[data-theme="dark"] .deletion-status-label { background: #263b53; color: #d8e5f4; }
+    body[data-theme="dark"] .deletion-status-declined { background: #442c34; color: #ffbaba; }
     .finance-edit { background: #e9f1fb; color: #173b67; }
     .finance-edit:hover { background: #dbe9f8; }
     .finance-delete { background: #fff0f0; color: #922e38; }
@@ -281,6 +286,7 @@
       .profile-grid .profile-submit { grid-column: auto; }
     }
   </style>
+  <link rel="stylesheet" href="{% static 'core/transaction_category.css' %}">
 </head>
 <body data-theme="{{ site_theme }}">
   <header>
@@ -347,11 +353,15 @@
           <input type="hidden" name="form_type" value="transaction">
           {{ form.non_field_errors }}
           {% for field in form %}
-            <div class="field-group">
-              <label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>
-              {{ field }}
-              {{ field.errors }}
-            </div>
+            {% if field.name == "category_choice" %}
+              <div class="field-group">{% include "includes/transaction_category.html" %}</div>
+            {% elif field.name != "category" %}
+              <div class="field-group">
+                <label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endif %}
           {% endfor %}
           <p class="submit-row"><button type="submit">{% tr "Save transaction" %}</button></p>
         </form>
@@ -378,7 +388,10 @@
           <td>{{ transaction.date|date:"M j, Y" }}</td>
           <td class="{{ transaction.type }}">{{ transaction.get_type_display|translate:site_language }}</td>
           <td>{{ transaction.category|translate:site_language }}</td><td>{{ transaction.amount|floatformat:2 }}</td><td>{{ transaction.note|default:"—" }}</td>
-          <td><a href="{% url 'transaction_edit' transaction.pk %}">{% tr "Edit" %}</a> · <a href="{% url 'transaction_delete' transaction.pk %}">{% tr "Delete" %}</a></td>
+          <td><div class="finance-card-actions">
+            <a class="finance-edit" href="{% url 'transaction_edit' transaction.pk %}">{% tr "Edit" %}</a>
+            <a class="finance-delete" href="{% url 'transaction_delete' transaction.pk %}">{% tr "Delete" %}</a>
+          </div></td>
         </tr>{% endfor %}</tbody></table></div>
       {% else %}
         {% if search_query or selected_type or selected_transaction_month %}<p class="empty">{% tr "No transactions match these filters." %} <a href="{% url 'home' %}">{% tr "Clear filters" %}</a></p>
@@ -580,13 +593,13 @@
         <div>
           <h3>{% tr "Income by category" %}</h3>
           {% for item in report_income_categories %}
-            <div class="bar-row"><div class="bar-meta"><span>{{ item.category }}</span><strong>{{ item.total|floatformat:2 }}</strong></div><div class="bar-track"><div class="bar-fill income-fill" style="width: {{ item.bar_width }}%"></div></div></div>
+            <div class="bar-row"><div class="bar-meta"><span>{{ item.category|translate:site_language }}</span><strong>{{ item.total|floatformat:2 }}</strong></div><div class="bar-track"><div class="bar-fill income-fill" style="width: {{ item.bar_width }}%"></div></div></div>
           {% empty %}<p class="empty">{% tr "No income recorded for this month." %}</p>{% endfor %}
         </div>
         <div>
           <h3>{% tr "Expenses by category" %}</h3>
           {% for item in report_expense_categories %}
-            <div class="bar-row"><div class="bar-meta"><span>{{ item.category }}</span><strong>{{ item.total|floatformat:2 }}</strong></div><div class="bar-track"><div class="bar-fill expense-fill" style="width: {{ item.bar_width }}%"></div></div></div>
+            <div class="bar-row"><div class="bar-meta"><span>{{ item.category|translate:site_language }}</span><strong>{{ item.total|floatformat:2 }}</strong></div><div class="bar-track"><div class="bar-fill expense-fill" style="width: {{ item.bar_width }}%"></div></div></div>
           {% empty %}<p class="empty">{% tr "No expenses recorded for this month." %}</p>{% endfor %}
         </div>
       </div>
@@ -651,6 +664,14 @@
           </form>
         </section>
       </div>
+      {% if not request.user.is_staff and not request.user.is_superuser %}
+        <section class="panel" style="margin-top: 18px" aria-labelledby="account-deletion-title">
+          <h2 id="account-deletion-title">{% tr "Account deletion" %}</h2>
+          <div id="account-deletion-status" data-url="{% url 'account_deletion_status' %}" aria-live="polite">
+            {% include "includes/account_deletion_status.html" %}
+          </div>
+        </section>
+      {% endif %}
     </section>
     </main>
   </div>
@@ -677,10 +698,28 @@
 
       const links = [...document.querySelectorAll(".dashboard-nav a[data-view]")];
       const views = [...document.querySelectorAll(".dashboard-view")];
+      const deletionStatus = document.getElementById("account-deletion-status");
+      const refreshDeletionStatus = async () => {
+        if (!deletionStatus || document.hidden || document.getElementById("my-profile").hidden) return;
+        try {
+          const response = await fetch(deletionStatus.dataset.url, { redirect: "error" });
+          if (!response.ok) return;
+          const fragment = document.createElement("template");
+          fragment.innerHTML = await response.text();
+          if (!deletionStatus.contains(document.activeElement) &&
+              (deletionStatus.textContent.trim() !== fragment.content.textContent.trim() ||
+               deletionStatus.querySelector("[name=request_id]")?.value !== fragment.content.querySelector("[name=request_id]")?.value)) {
+            deletionStatus.replaceChildren(fragment.content);
+          }
+        } catch {
+          // Keep the last displayed status until the next refresh.
+        }
+      };
       const showView = (viewId, activeHash, updateHistory = true) => {
         const selectedView = viewId;
         if (!views.some((view) => view.id === selectedView)) return;
         views.forEach((view) => { view.hidden = view.id !== selectedView; });
+        if (selectedView === "my-profile") refreshDeletionStatus();
         links.forEach((link) => {
           const active = link.getAttribute("href") === activeHash;
           link.classList.toggle("active", active);
@@ -710,7 +749,12 @@
       const initialHash = "{% if profile_form.is_bound or password_change_form.is_bound %}#my-profile{% elif budget_form.is_bound %}#monthly-budgets{% elif goal_form.is_bound or contribution_goal_id %}#savings-goals{% endif %}" || window.location.hash || (new URLSearchParams(window.location.search).get("dashboard_view") === "transactions" ? "#transactions" : "#dashboard");
       const initialLink = links.find((item) => item.getAttribute("href") === initialHash) || links[0];
       showView(initialLink.dataset.view, initialLink.getAttribute("href"), false);
+      if (deletionStatus) {
+        window.addEventListener("focus", refreshDeletionStatus);
+        window.setInterval(refreshDeletionStatus, 15000);
+      }
     })();
   </script>
+  <script src="{% static 'core/transaction_category.js' %}"></script>
 </body>
 </html>

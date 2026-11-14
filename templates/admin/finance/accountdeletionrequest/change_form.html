@@ -1,0 +1,20 @@
+{% extends "admin/change_form.html" %}
+{% load static ui %}
+
+{% block bodyclass %}{{ block.super }} account-deletion-review{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'core/admin_delete.css' %}">
+{% endblock %}
+
+{% block submit_buttons_top %}{% endblock %}
+{% block submit_buttons_bottom %}
+  {% if can_review and original.status == "pending" %}
+    {% url 'admin:finance_accountdeletionrequest_review' original.pk as review_url %}
+    <div class="deletion-review-actions">
+      <a class="review-action review-accept" href="{% url 'admin:finance_accountdeletionrequest_confirm' original.pk %}">{% tr "Accept" %}</a>
+      <button class="review-action review-decline" type="submit" formaction="{{ review_url }}" name="decision" value="decline">{% tr "Decline" %}</button>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "finance/transaction_action.html" %}
+{% load ui %}
+
+{% block page_title %}{% tr "Request account deletion" %}{% endblock %}
+{% block heading %}{% tr "Request account deletion" %}{% endblock %}
+
+{% block content %}
+  {% if pending %}
+    <p>{% tr "Your request is awaiting administrator review." %}</p>
+    <form method="post" class="transaction-actions">
+      {% csrf_token %}
+      <a class="transaction-button transaction-cancel" href="{{ back_url }}">{% tr "My profile" %}</a>
+      <button class="transaction-button transaction-delete" type="submit" name="action" value="cancel">{% tr "Cancel request" %}</button>
+    </form>
+  {% else %}
+    <p>{% tr "An administrator will review your request before your account is deleted." %}</p>
+    <form method="post" class="transaction-fields">
+      {% csrf_token %}
+      {{ reason_form.non_field_errors }}
+      <div>
+        <label for="{{ reason_form.reason.id_for_label }}">{% tr "Reason" %}</label>
+        {{ reason_form.reason }}
+        {{ reason_form.reason.errors }}
+      </div>
+      <div class="transaction-actions">
+        <a class="transaction-button transaction-cancel" href="{{ back_url }}">{% tr "Cancel" %}</a>
+        <button class="transaction-button transaction-save" type="submit" name="action" value="send">{% tr "Send verification code" %}</button>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}

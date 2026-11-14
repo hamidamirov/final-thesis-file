@@ -53,3 +53,38 @@ body[data-theme="dark"] .admin-delete-panel {
 .delete-confirmation .admin-delete-panel input[type="submit"]:hover { background: var(--delete-confirm-hover) !important; }
 .delete-confirmation .admin-delete-panel .cancel-link:hover { background: var(--delete-surface); color: var(--delete-text); }
 .delete-confirmation .admin-delete-panel :is(input[type="submit"], .cancel-link):focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
+
+.account-deletion-review #content > h1 {
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+.account-deletion-review #content-main { max-width: 860px; }
+.account-deletion-review .readonly { overflow-wrap: anywhere; }
+.account-deletion-review .field-reason .readonly { white-space: pre-wrap; }
+.deletion-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.deletion-review-actions .review-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 8px 16px;
+  border: 1px solid var(--review-border);
+  border-radius: 9px;
+  background: var(--review-bg);
+  color: var(--review-text);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.deletion-review-actions .review-action:hover { background: var(--review-hover); color: var(--review-text); }
+.deletion-review-actions .review-action:focus-visible { outline: 2px solid var(--admin-blue); outline-offset: 2px; }
+.review-accept { --review-bg: #e4f0e8; --review-hover: #d5e8db; --review-border: #b7d1bf; --review-text: #244f36; }
+.review-decline { --review-bg: #f8e9ec; --review-hover: #f0d9de; --review-border: #dfbac2; --review-text: #852e40; }
+body[data-theme="dark"] .review-accept { --review-bg: #234534; --review-hover: #2d5640; --review-border: #527b63; --review-text: #def3e5; }
+body[data-theme="dark"] .review-decline { --review-bg: #472831; --review-hover: #57333d; --review-border: #805363; --review-text: #ffe3e9; }

@@ -1,0 +1,6 @@
+{% load l10n ui %}
+<div class="code-timer" id="verification-timer" data-remaining-ms="{{ remaining_ms|unlocalize }}" hidden>
+  <p><span>{% if is_blocked %}{% tr "Lockout ends in" %}{% else %}{% tr "Time remaining" %}{% endif %}</span> <span id="verification-countdown"></span></p>
+</div>
+<p id="verification-locked" role="status" {% if not is_blocked %}hidden{% endif %}>{% tr "Too many incorrect codes. Wait until the lockout ends." %}</p>
+<p id="verification-expired" role="status" {% if can_verify or is_blocked %}hidden{% endif %}>{% tr "This code is no longer valid." %}</p>

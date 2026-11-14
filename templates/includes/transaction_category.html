@@ -1,0 +1,17 @@
+{% load ui %}
+<div data-transaction-category data-type-id="{{ form.type.id_for_label }}" data-custom-value="{{ form.CUSTOM_CATEGORY }}" data-select-type="{% tr 'Choose a transaction type first' %}">
+  <label id="{{ form.category_choice.id_for_label }}_label" for="{{ form.category_choice.id_for_label }}">{% tr "Category" %}</label>
+  {{ form.category_choice }}
+  <details class="category-picker" hidden>
+    <summary aria-labelledby="{{ form.category_choice.id_for_label }}_label {{ form.category_choice.id_for_label }}_selection">
+      <span id="{{ form.category_choice.id_for_label }}_selection"></span>
+    </summary>
+    <ul></ul>
+  </details>
+  {{ form.category_choice.errors }}
+  <div data-custom-category style="margin-top: 10px">
+    <label for="{{ form.category.id_for_label }}">{% tr "Custom category" %}</label>
+    {{ form.category }}
+    {{ form.category.errors }}
+  </div>
+</div>

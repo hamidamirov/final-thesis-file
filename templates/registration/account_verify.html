@@ -1,0 +1,28 @@
+{% extends "registration/signup_verify.html" %}
+{% load static ui %}
+
+{% block page_title %}{% tr title %}{% endblock %}
+{% block heading %}{% tr title %}{% endblock %}
+
+{% block content %}
+  <p>{% tr "Enter the six-digit code sent to your account email. The code expires in 2 minutes." %}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% if can_verify %}
+      {% include "includes/verification_code.html" %}
+    {% else %}
+      {{ form.code.errors }}
+    {% endif %}
+    {% include "includes/verification_timer.html" %}
+    <button type="submit" id="verification-submit" {% if action %}name="action" value="{{ action }}"{% endif %} {% if not can_verify %}disabled{% endif %}>{% tr submit_label %}</button>
+  </form>
+  {% if action %}
+    <form method="post" class="resend-form">
+      {% csrf_token %}
+      <button type="submit" name="action" value="restart">{% tr "Start again" %}</button>
+    </form>
+  {% else %}
+    <a class="verification-back" href="{{ back_url }}">{% tr back_label %}</a>
+  {% endif %}
+{% endblock %}

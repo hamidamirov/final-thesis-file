@@ -1,12 +1,21 @@
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth.admin import GroupAdmin, UserAdmin as DjangoUserAdmin
 from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import path, reverse
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_GET, require_POST
 
 from apps.core.date_fields import PastOrTodayDatesAdmin
 from apps.core.ui_text import localize_admin_model, localize_ui, ui_lazy
 
 from .models import (
+    AccountDeletionRequest,
     Budget,
     FinancialTip,
     SavingChallenge,
@@ -16,6 +25,89 @@ from .models import (
     Transaction,
     UserChallenge,
 )
+
+
+@admin.register(AccountDeletionRequest)
+class AccountDeletionRequestAdmin(admin.ModelAdmin):
+    list_display = ("username", "reason", "requested_at", "status")
+    list_filter = ("status",)
+    search_fields = ("username", "reason")
+    readonly_fields = ("user", "username", "reason", "requested_at", "status", "decided_at", "reviewed_by")
+    fields = readonly_fields
+    change_form_template = "admin/finance/accountdeletionrequest/change_form.html"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        if request.method == "POST":
+            raise PermissionDenied
+        extra_context = {
+            **(extra_context or {}),
+            "can_review": request.user.has_perms(("finance.change_accountdeletionrequest", "auth.delete_user")),
+        }
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def get_urls(self):
+        return [
+            path("<int:pk>/confirm/", self.admin_site.admin_view(self.confirm_accept), name="finance_accountdeletionrequest_confirm"),
+            path("<int:pk>/review/", self.admin_site.admin_view(self.review), name="finance_accountdeletionrequest_review"),
+            *super().get_urls(),
+        ]
+
+    @method_decorator(require_GET)
+    def confirm_accept(self, request, pk):
+        if not request.user.has_perms(("finance.change_accountdeletionrequest", "auth.delete_user")):
+            raise PermissionDenied
+        entry = get_object_or_404(AccountDeletionRequest.objects.select_related("user"), pk=pk)
+        change_url = reverse("admin:finance_accountdeletionrequest_change", args=[pk])
+        if entry.status != AccountDeletionRequest.Status.PENDING:
+            self.message_user(request, localize_ui("This request has already been resolved."), messages.WARNING)
+            return redirect(change_url)
+        if not entry.user or entry.user.is_staff or entry.user.is_superuser:
+            self.message_user(request, localize_ui("This account cannot be deleted through this request."), messages.ERROR)
+            return redirect(change_url)
+        return render(request, "admin/finance/accountdeletionrequest/confirm_accept.html", {
+            **self.admin_site.each_context(request),
+            "title": localize_ui("Confirm account deletion"),
+            "entry": entry,
+            "change_url": change_url,
+        })
+
+    @method_decorator(require_POST)
+    @transaction.atomic
+    def review(self, request, pk):
+        decision = request.POST.get("decision")
+        if not request.user.has_perms(("finance.change_accountdeletionrequest", "auth.delete_user")):
+            raise PermissionDenied
+        if decision not in ("accept", "decline"):
+            raise PermissionDenied
+        if decision == "accept" and request.POST.get("confirm") != "yes":
+            return redirect("admin:finance_accountdeletionrequest_confirm", pk=pk)
+
+        entry = get_object_or_404(AccountDeletionRequest, pk=pk)
+        user = User.objects.select_for_update().filter(pk=entry.user_id).first()
+        entry = AccountDeletionRequest.objects.select_for_update().get(pk=pk)
+        if entry.status != AccountDeletionRequest.Status.PENDING:
+            self.message_user(request, localize_ui("This request has already been resolved."), messages.WARNING)
+        elif decision == "accept" and (not user or user.is_staff or user.is_superuser):
+            self.message_user(request, localize_ui("This account cannot be deleted through this request."), messages.ERROR)
+        else:
+            entry.status = AccountDeletionRequest.Status.ACCEPTED if decision == "accept" else AccountDeletionRequest.Status.DECLINED
+            entry.decided_at = timezone.now()
+            entry.reviewed_by = request.user
+            entry.save(update_fields=["status", "decided_at", "reviewed_by"])
+            if decision == "accept":
+                profile = getattr(user, "student_profile", None)
+                if profile and profile.profile_picture:
+                    picture = profile.profile_picture
+                    transaction.on_commit(lambda: picture.storage.delete(picture.name), robust=True)
+                user.delete()
+            self.log_change(request, entry, entry.get_status_display())
+        return redirect(reverse("admin:finance_accountdeletionrequest_change", args=[pk]))
 
 
 class StudentProfileInline(admin.StackedInline):

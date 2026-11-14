@@ -1,0 +1,9 @@
+{% load ui %}
+<label id="verification-code-label" for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+{{ form.code }}
+<div class="code-boxes" id="verification-code-boxes" role="group" aria-labelledby="verification-code-label" hidden>
+  {% for digit in "123456" %}
+    <input type="text" inputmode="numeric" pattern="[0-9]" aria-label="{% tr 'Digit {digit} of 6' digit=digit %}" {% if forloop.first %}autocomplete="one-time-code"{% else %}autocomplete="off"{% endif %}>
+  {% endfor %}
+</div>
+{{ form.code.errors }}

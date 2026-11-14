@@ -5,6 +5,9 @@ from django.conf.urls.static import static
 from django.urls import path
 
 from apps.core.views import database_health, home, manage_admin_activity, save_preferences
+from apps.finance.account_views import (
+    EmailVerificationLoginView, account_deletion_status, login_verify, request_account_deletion, verify_email_change,
+)
 from apps.finance.views import (
     budget_delete,
     dashboard,
@@ -20,7 +23,11 @@ from apps.finance.views import (
 urlpatterns = [
     path("admin/activity/", admin.site.admin_view(manage_admin_activity), name="manage_admin_activity"),
     path("admin/", admin.site.urls),
-    path("accounts/login/", auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
+    path("accounts/login/", EmailVerificationLoginView.as_view(template_name="registration/login.html"), name="login"),
+    path("accounts/login/verify/", login_verify, name="login_verify"),
+    path("accounts/email/verify/", verify_email_change, name="verify_email_change"),
+    path("accounts/delete-request/", request_account_deletion, name="request_account_deletion"),
+    path("accounts/delete-request/status/", account_deletion_status, name="account_deletion_status"),
     path(
         "accounts/password-reset/",
         auth_views.PasswordResetView.as_view(

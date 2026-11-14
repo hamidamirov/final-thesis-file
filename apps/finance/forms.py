@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 from apps.core.date_fields import PastOrTodayDatesMixin
 from apps.core.ui_text import translate_ui, ui_lazy
@@ -53,6 +53,21 @@ class AccountDetailsForm(forms.ModelForm):
         return email
 
 
+class StudentAuthenticationForm(AuthenticationForm):
+    def clean(self):
+        identifier = self.cleaned_data.get("username")
+        if identifier and "@" in identifier:
+            user_model = get_user_model()
+            users = user_model._default_manager
+            try:
+                users.get_by_natural_key(identifier)
+            except user_model.DoesNotExist:
+                usernames = list(users.filter(email__iexact=identifier).values_list("username", flat=True)[:2])
+                if len(usernames) == 1:
+                    self.cleaned_data["username"] = usernames[0]
+        return super().clean()
+
+
 class BudgetForm(PastOrTodayDatesMixin, forms.ModelForm):
     class Meta:
         model = Budget
@@ -83,12 +98,63 @@ class GoalContributionForm(forms.Form):
 
 
 class TransactionForm(PastOrTodayDatesMixin, forms.ModelForm):
-    def __init__(self, *args, language="en", **kwargs):
+    EXPENSE_CATEGORIES = (
+        "Food", "Coffee", "Groceries", "Transport", "Rent", "Utilities",
+        "Books", "Shopping", "Health", "Entertainment", "Subscriptions",
+    )
+    INCOME_CATEGORIES = ("Salary", "Study grant", "Freelance", "Gifts")
+    DEFAULT_CATEGORIES = EXPENSE_CATEGORIES + INCOME_CATEGORIES
+    CATEGORY_ALIASES = {"yemey": "Food", "yemək": "Food", "qida": "Food"}
+    CUSTOM_CATEGORY = "__custom_category__"  # Used only by the category selector.
+    category_choice = forms.ChoiceField(required=False, label=ui_lazy("Category"))
+    field_order = ["type", "category_choice", "category", "amount", "date", "note"]
+
+    def __init__(self, *args, language="en", categories=(), **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["type"].choices = [
             (value, translate_ui(label, language))
             for value, label in self.fields["type"].choices
         ]
+        categories = tuple(categories)
+        current = self.initial.get("category")
+        while any(name == self.CUSTOM_CATEGORY for _, name in categories) or self.CUSTOM_CATEGORY == current:
+            self.CUSTOM_CATEGORY += "_"
+        choices = [("", translate_ui("Choose a category", language))]
+        self.category_types = {}
+        all_presets = {name.casefold() for name in self.DEFAULT_CATEGORIES}
+        records = (*categories, (self.initial.get("type"), current))
+        for kind, presets in (
+            (Transaction.Type.INCOME, self.INCOME_CATEGORIES),
+            (Transaction.Type.EXPENSE, self.EXPENSE_CATEGORIES),
+        ):
+            saved = {
+                self.CATEGORY_ALIASES.get(name.casefold(), name).casefold(): name
+                for saved_type, name in records if saved_type == kind and name
+            }
+            typed_choices = [(saved.get(name.casefold(), name), translate_ui(name, language)) for name in presets]
+            typed_choices.extend((saved[key], saved[key]) for key in sorted(saved.keys() - all_presets))
+            self.category_types[kind] = {value for value, _ in typed_choices}
+            choices.append((translate_ui(kind.label, language), typed_choices))
+        choices.append((self.CUSTOM_CATEGORY, translate_ui("Add a custom category", language)))
+        self.fields["category_choice"].choices = choices
+        self.fields["category"].required = False
+        self.fields["category"].label = ui_lazy("Custom category")
+        available = current in self.category_types.get(self.initial.get("type"), ())
+        self.initial["category_choice"] = current if available else self.CUSTOM_CATEGORY if current else ""
+        self.initial["category"] = current if current and not available else ""
+
+    def clean(self):
+        data = super().clean()
+        choice = data.get("category_choice")
+        if choice and choice != self.CUSTOM_CATEGORY:
+            if choice in self.category_types.get(data.get("type"), ()):
+                data["category"] = choice
+            elif "type" in data:
+                self.add_error("category_choice", ui_lazy("Choose a category for this transaction type."))
+        elif "category" in data and not data["category"]:
+            field = "category" if choice == self.CUSTOM_CATEGORY else "category_choice"
+            self.add_error(field, ui_lazy("Enter a category name." if choice else "Choose a category."))
+        return data
 
     class Meta:
         model = Transaction
@@ -123,3 +189,7 @@ class RegistrationCodeForm(forms.Form):
             attrs={"inputmode": "numeric", "autocomplete": "one-time-code", "autofocus": True}
         ),
     )
+
+
+class AccountDeletionRequestForm(forms.Form):
+    reason = forms.CharField(label=ui_lazy("Reason"), max_length=1000, widget=forms.Textarea(attrs={"rows": 4}))

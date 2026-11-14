@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from axes.models import AccessFailureLog, AccessLog
 
-from apps.finance.models import PendingRegistration
+from apps.finance.models import AccountDeletionRequest, PendingRegistration, Transaction
 
 
 class LoginSecurityTests(TestCase):
@@ -37,14 +37,23 @@ class LoginSecurityTests(TestCase):
     def test_successful_login_is_recorded(self):
         username = "security-success-user"
         password = "A-safe-test-password-42!"
-        get_user_model().objects.create_user(username=username, password=password)
+        get_user_model().objects.create_user(username=username, email="student@example.test", password=password)
 
         response = self.client.post(
             reverse("login"),
-            {"username": username, "password": password},
+            {"username": "STUDENT@example.test", "password": password},
         )
 
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("login_verify"))
+        self.assertContains(self.client.get(reverse("login_verify")), 'aria-label="Digit 6 of 6"')
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertFalse(AccessLog.objects.filter(username=username).exists())
+        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 302)
+        code = re.search(r"verification code is ([0-9]{6})\.", mail.outbox[0].body)[1]
+        incorrect = "000000" if code != "000000" else "000001"
+        self.assertContains(self.client.post(reverse("login_verify"), {"code": incorrect}), "incorrect")
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertEqual(self.client.post(reverse("login_verify"), {"code": code}).status_code, 302)
         self.assertTrue(AccessLog.objects.filter(username=username).exists())
 
     def test_admin_login_uses_the_same_failure_protection(self):
@@ -72,6 +81,19 @@ class RegistrationVerificationTests(TestCase):
     username = "new-security-student"
     email = "new-security-student@example.test"
 
+    def test_signup_rejects_passwords_missing_required_characters(self):
+        for password in ("lowercase-42!", "Uppercase-without-number!", "UppercaseNoSymbol42"):
+            with self.subTest(password=password):
+                response = self.client.post(reverse("signup"), {
+                    "username": self.username,
+                    "email": self.email,
+                    "password1": password,
+                    "password2": password,
+                })
+                self.assertTrue(response.context["form"].errors["password2"])
+        self.assertFalse(PendingRegistration.objects.exists())
+        self.assertFalse(mail.outbox)
+
     def start_registration(self, client=None):
         return (client or self.client).post(
             reverse("signup"),
@@ -86,6 +108,7 @@ class RegistrationVerificationTests(TestCase):
     def test_signup_sends_code_and_logs_in_only_after_verification(self):
         self.assertRedirects(self.start_registration(), reverse("signup_verify"))
         self.assertFalse(get_user_model().objects.filter(username=self.username).exists())
+
         self.assertNotIn("_auth_user_id", self.client.session)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.email])
@@ -175,3 +198,121 @@ class RegistrationVerificationTests(TestCase):
 
         self.assertContains(response, "This code is no longer valid")
         self.assertFalse(get_user_model().objects.filter(username=self.username).exists())
+
+class AccountDeletionTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        users = get_user_model().objects
+        cls.student = users.create_user("student-to-review", email="student@example.test")
+        cls.staff = users.create_user("staff", is_staff=True)
+        cls.admin = users.create_superuser("reviewer", email="admin@example.test")
+
+    def test_email_change_requires_a_code_from_the_existing_address(self):
+        self.client.force_login(self.student)
+        response = self.client.post(reverse("dashboard"), {
+            "form_type": "profile", "email": "new@example.test",
+        })
+        self.assertRedirects(response, reverse("verify_email_change"))
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.email, "student@example.test")
+        self.assertEqual(mail.outbox[-1].to, ["student@example.test"])
+        code = re.search(r"verification code is ([0-9]{6})\.", mail.outbox[-1].body)[1]
+        self.client.post(reverse("verify_email_change"), {"code": code})
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.email, "new@example.test")
+
+    def test_user_verification_and_admin_review(self):
+        self.client.force_login(self.student)
+        request_url = reverse("request_account_deletion")
+        self.assertRedirects(self.client.post(request_url, {
+            "action": "send", "reason": "I no longer use this account.",
+        }), request_url)
+        self.assertFalse(AccountDeletionRequest.objects.exists())
+        self.assertContains(self.client.get(request_url), 'aria-label="Digit 6 of 6"')
+        self.assertContains(self.client.get(request_url), 'id="verification-countdown"')
+        code = re.search(r"verification code is ([0-9]{6})\.", mail.outbox[-1].body)[1]
+        self.client.post(request_url, {"action": "verify", "code": code})
+        entry = AccountDeletionRequest.objects.get(user=self.student)
+        self.assertEqual(entry.status, AccountDeletionRequest.Status.PENDING)
+        self.assertEqual(entry.reason, "I no longer use this account.")
+        self.assertIsNotNone(entry.requested_at)
+
+        review_url = reverse("admin:finance_accountdeletionrequest_review", args=[entry.pk])
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.post(review_url, {"decision": "accept"}).status_code, 403)
+
+        self.client.force_login(self.admin)
+        change_url = reverse("admin:finance_accountdeletionrequest_change", args=[entry.pk])
+        review_page = self.client.get(change_url)
+        self.assertContains(review_page, f'formaction="{review_url}"')
+        self.assertContains(review_page, entry.reason)
+        self.assertEqual(self.client.get(review_url).status_code, 405)
+        self.assertEqual(self.client.post(review_url, {"decision": "decline"}).status_code, 302)
+        entry.refresh_from_db()
+        self.assertEqual(entry.status, AccountDeletionRequest.Status.DECLINED)
+        self.assertTrue(get_user_model().objects.filter(pk=self.student.pk).exists())
+
+        self.client.force_login(self.student)
+        status_url = reverse("account_deletion_status")
+        self.assertContains(self.client.get(status_url), "The administrator declined")
+        self.assertContains(self.client.get(status_url), "Create a new request")
+        self.client.post(request_url, {"action": "remove", "request_id": entry.pk})
+        self.assertNotContains(self.client.get(status_url), "The administrator declined")
+        entry.refresh_from_db()
+        self.assertTrue(entry.hidden_from_profile)
+        self.assertEqual(entry.status, AccountDeletionRequest.Status.DECLINED)
+        self.assertContains(self.client.get(request_url), "Send verification code")
+
+        self.client.force_login(self.admin)
+        entry = AccountDeletionRequest.objects.create(
+            user=self.student, username=self.student.username, reason="Please close my account.",
+        )
+        review_url = reverse("admin:finance_accountdeletionrequest_review", args=[entry.pk])
+        confirm_url = reverse("admin:finance_accountdeletionrequest_confirm", args=[entry.pk])
+        self.assertRedirects(self.client.post(review_url, {"decision": "accept"}), confirm_url)
+        confirm_page = self.client.get(confirm_url)
+        self.assertContains(confirm_page, "admin-delete-panel")
+        self.assertContains(confirm_page, self.student.username)
+        self.assertTrue(get_user_model().objects.filter(pk=self.student.pk).exists())
+        self.assertEqual(self.client.post(review_url, {"decision": "accept", "confirm": "yes"}).status_code, 302)
+        entry.refresh_from_db()
+        self.assertEqual(entry.status, AccountDeletionRequest.Status.ACCEPTED)
+        self.assertEqual(entry.reviewed_by, self.admin)
+        self.assertIsNone(entry.user)
+        self.assertFalse(get_user_model().objects.filter(pk=self.student.pk).exists())
+
+
+class TransactionCategoryTests(TestCase):
+    def test_select_and_save_a_custom_category_for_reuse(self):
+        user = get_user_model().objects.create_user("category-student")
+        self.client.force_login(user)
+        dashboard = reverse("dashboard")
+        self.assertContains(self.client.get(dashboard), '<option value="Coffee">Coffee</option>', html=True)
+        data = {"form_type": "transaction", "type": "expense", "amount": "4", "date": timezone.localdate().isoformat()}
+        response = self.client.post(dashboard, {**data, "category_choice": "Salary"})
+        self.assertContains(response, "Choose a category for this transaction type.")
+        self.assertFalse(Transaction.objects.filter(user=user).exists())
+        self.client.post(dashboard, {**data, "category_choice": "Coffee"})
+        self.assertTrue(Transaction.objects.filter(user=user, category="Coffee").exists())
+        self.client.post(dashboard, {**data, "category_choice": "__custom_category__", "category": "Bike repair"})
+        entry = Transaction.objects.get(user=user, category="Bike repair")
+        self.assertContains(self.client.get(dashboard), '<option value="Bike repair">Bike repair</option>', html=True)
+        self.assertContains(
+            self.client.get(reverse("transaction_edit", args=[entry.pk])),
+            '<option value="Bike repair" selected>Bike repair</option>', html=True,
+        )
+
+    def test_existing_food_category_is_localized_in_the_picker(self):
+        user = get_user_model().objects.create_user("legacy-category-student")
+        entry = Transaction.objects.create(
+            user=user, type="expense", category="yemey", amount=4, date=timezone.localdate(),
+        )
+        self.client.force_login(user)
+        self.assertContains(self.client.get(reverse("dashboard")), '<option value="yemey">Food</option>', html=True)
+        session = self.client.session
+        session["site_language"] = "az"
+        session.save()
+        self.assertContains(
+            self.client.get(reverse("transaction_edit", args=[entry.pk])),
+            '<option value="yemey" selected>Qida</option>', html=True,
+        )

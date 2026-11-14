@@ -23,6 +23,55 @@ class PendingRegistration(models.Model):
     resend_count = models.PositiveSmallIntegerField(default=0)
 
 
+class AccountVerification(models.Model):
+    class Purpose(models.TextChoices):
+        LOGIN = "login", "Login"
+        DELETION = "deletion", "Account deletion"
+        EMAIL = "email", "Email change"
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    purpose = models.CharField(max_length=8, choices=Purpose.choices)
+    browser_hash = models.CharField(max_length=64)
+    code_hash = models.CharField(max_length=128)
+    account_hash = models.CharField(max_length=64)
+    expires_at = models.DateTimeField()
+    attempts_left = models.PositiveSmallIntegerField(default=5)
+    blocked_until = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "purpose"], name="unique_account_verification_purpose"),
+        ]
+
+
+class AccountDeletionRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", ui_lazy("Pending")
+        ACCEPTED = "accepted", ui_lazy("Accepted")
+        DECLINED = "declined", ui_lazy("Declined")
+        CANCELLED = "cancelled", ui_lazy("Cancelled")
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    username = models.CharField(max_length=150, verbose_name=ui_lazy("Username"))
+    reason = models.CharField(max_length=1000, verbose_name=ui_lazy("Reason"))
+    status = models.CharField(max_length=9, choices=Status.choices, default=Status.PENDING, verbose_name=ui_lazy("Status"))
+    requested_at = models.DateTimeField(auto_now_add=True, verbose_name=ui_lazy("Requested at"))
+    decided_at = models.DateTimeField(null=True, blank=True, verbose_name=ui_lazy("Decided at"))
+    hidden_from_profile = models.BooleanField(default=False)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="reviewed_account_deletion_requests", verbose_name=ui_lazy("Reviewed by"),
+    )
+
+    class Meta:
+        ordering = ["-requested_at", "-pk"]
+        verbose_name = ui_lazy("Account deletion request")
+        verbose_name_plural = ui_lazy("Account deletion requests")
+
+    def __str__(self):
+        return self.username
+
+
 class Budget(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

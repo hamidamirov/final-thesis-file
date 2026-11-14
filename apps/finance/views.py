@@ -19,6 +19,8 @@ from django.views.decorators.cache import never_cache
 
 from apps.core.ui_text import localize_ui, translate_ui
 
+from .account_verification import issue_code
+from .account_views import latest_deletion_request
 from .forms import (
     AccountDetailsForm,
     BudgetForm,
@@ -30,6 +32,7 @@ from .forms import (
     TransactionForm,
 )
 from .models import (
+    AccountVerification,
     Budget,
     FinancialTip,
     PendingRegistration,
@@ -239,12 +242,28 @@ def dashboard(request):
         profile_form = StudentProfileForm(
             request.POST, request.FILES, instance=profile
         )
-        account_details_form = AccountDetailsForm(request.POST, instance=request.user)
-        if profile_form.is_valid() and account_details_form.is_valid():
-            profile_form.save()
-            account_details_form.save()
-            messages.success(request, translate_ui("Profile updated successfully.", language))
-            return redirect("/dashboard/#my-profile")
+        with transaction.atomic():
+            account = get_user_model().objects.select_for_update().get(pk=request.user.pk)
+            current_email = account.email
+            account_details_form = AccountDetailsForm(request.POST, instance=account)
+            if profile_form.is_valid() and account_details_form.is_valid():
+                confirm_email = current_email and current_email.casefold() != account.email.casefold()
+                if confirm_email:
+                    error = issue_code(request, request.user, AccountVerification.Purpose.EMAIL)
+                    if error:
+                        messages.error(request, localize_ui(error))
+                        return redirect("/dashboard/#my-profile")
+                    request.session["pending_profile_email"] = account.email
+                fields = ["first_name", "last_name"]
+                if not current_email:
+                    fields.append("email")
+                account.save(update_fields=fields)
+                profile_form.save()
+                if confirm_email:
+                    return redirect("verify_email_change")
+                request.session.pop("pending_profile_email", None)
+                messages.success(request, translate_ui("Profile updated successfully.", language))
+                return redirect("/dashboard/#my-profile")
 
     if request.method == "POST" and request.POST.get("form_type") == "password_change":
         password_change_form = PasswordChangeForm(user=request.user, data=request.POST)
@@ -285,9 +304,13 @@ def dashboard(request):
         return redirect("home")
 
     form_type = request.POST.get("form_type") if request.method == "POST" else ""
+    user_transactions = Transaction.objects.filter(user=request.user)
+    categories = list(user_transactions.order_by("type", "category").values_list("type", "category").distinct())
+    form = TransactionForm(
+        request.POST if form_type == "transaction" else None, language=language, categories=categories,
+    )
     contribution_goal_id = None
     if form_type == "budget":
-        form = TransactionForm(language=language)
         budget_form = BudgetForm(request.POST)
         if budget_form.is_valid():
             budget = budget_form.save(commit=False)
@@ -300,7 +323,6 @@ def dashboard(request):
             messages.success(request, translate_ui("Monthly budget saved successfully.", language))
             return redirect(f"{reverse('dashboard')}#monthly-budgets")
     elif form_type == "savings_goal":
-        form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm(request.POST)
         if goal_form.is_valid():
@@ -310,7 +332,6 @@ def dashboard(request):
             messages.success(request, translate_ui("Savings goal created successfully.", language))
             return redirect(f"{reverse('dashboard')}#savings-goals")
     elif form_type == "goal_contribution":
-        form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
         goal = get_object_or_404(
@@ -327,32 +348,37 @@ def dashboard(request):
             )
             return redirect(f"{reverse('dashboard')}#savings-goals")
     elif form_type == "transaction":
-        form = TransactionForm(request.POST, language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
         if form.is_valid():
-            transaction = form.save(commit=False)
-            transaction.user = request.user
-            transaction.save()
+            new_transaction = form.save(commit=False)
+            new_transaction.user = request.user
+            new_transaction.save()
             messages.success(request, translate_ui("Transaction added successfully.", language))
             return redirect("home")
     else:
-        form = TransactionForm(language=language)
         budget_form = BudgetForm(initial={"month": first_day_of_current_month()})
         goal_form = SavingsGoalForm()
 
     if "goal_form" not in locals():
         goal_form = SavingsGoalForm()
 
-    user_transactions = Transaction.objects.filter(user=request.user)
     transaction_list = user_transactions
     search_query = request.GET.get("q", "").strip()
     selected_type = request.GET.get("type", "")
     selected_transaction_month = request.GET.get("transaction_month", "").strip()
     month_start = first_day_of_current_month()
     if search_query:
+        matching_presets = {
+            name.casefold() for name in TransactionForm.DEFAULT_CATEGORIES
+            if search_query.casefold() in translate_ui(name, language).casefold()
+        }
         transaction_list = transaction_list.filter(
             Q(category__icontains=search_query) | Q(note__icontains=search_query)
+            | Q(category__in=[
+                category for _, category in categories
+                if TransactionForm.CATEGORY_ALIASES.get(category.casefold(), category).casefold() in matching_presets
+            ])
         )
     if selected_type in Transaction.Type.values:
         transaction_list = transaction_list.filter(type=selected_type)
@@ -457,6 +483,7 @@ def dashboard(request):
         request,
         "finance/dashboard.html",
         {
+            "deletion_request": latest_deletion_request(request.user) if not request.user.is_staff and not request.user.is_superuser else None,
             "form": form,
             "transactions": transaction_list,
             "recent_transactions": user_transactions[:5],
@@ -601,9 +628,10 @@ def savings_goal_delete(request, pk):
 @login_required
 def transaction_edit(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
+    categories = Transaction.objects.filter(user=request.user).order_by("type", "category").values_list("type", "category").distinct()
     language = request.session.get("site_language", "en")
     if request.method == "POST":
-        form = TransactionForm(request.POST, instance=transaction, language=language)
+        form = TransactionForm(request.POST, instance=transaction, language=language, categories=categories)
         if form.is_valid():
             form.save()
             messages.success(
@@ -612,7 +640,7 @@ def transaction_edit(request, pk):
             )
             return redirect("home")
     else:
-        form = TransactionForm(instance=transaction, language=language)
+        form = TransactionForm(instance=transaction, language=language, categories=categories)
     return render(
         request,
         "finance/transaction_form.html",
