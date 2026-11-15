@@ -151,6 +151,7 @@ ADDITIONAL_UI_TEXT = {
     "Freelance": ("Laisvai samdomas darbas", "Sərbəst iş", "Фриланс"),
     "Gifts": ("Dovanos", "Hədiyyələr", "Подарунки"),
     "Confirm account deletion": ("Patvirtinti paskyros ištrynimą", "Hesabın silinməsini təsdiqlə", "Підтвердити видалення облікового запису"),
+    "Download Excel": ("Atsisiųsti „Excel“ failą", "Excel faylını yüklə", "Завантажити файл Excel"),
     "Finance": ("Finansai", "Maliyyə", "Фінанси"),
     "Access attempt": ("Bandymas prisijungti", "Giriş cəhdi", "Спроба входу"),
     "Access attempts": ("Bandymai prisijungti", "Giriş cəhdləri", "Спроби входу"),

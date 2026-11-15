@@ -11,7 +11,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import get_connection, send_mail
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Sum
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -44,6 +44,7 @@ from .models import (
     UserChallenge,
     first_day_of_current_month,
 )
+from .report_export import monthly_workbook
 
 
 REGISTRATION_CODE_LIFETIME = timedelta(minutes=2)
@@ -519,8 +520,7 @@ def dashboard(request):
     )
 
 
-@login_required
-def monthly_report_csv(request):
+def monthly_report_data(request):
     month_start = first_day_of_current_month()
     report_month = past_or_current_month(request.GET.get("month", ""), month_start) or month_start
 
@@ -540,7 +540,25 @@ def monthly_report_csv(request):
     )
     income = totals["income"] or Decimal("0.00")
     expenses = totals["expenses"] or Decimal("0.00")
+    return report_month, transactions, income, expenses
 
+
+@login_required
+def monthly_report_xlsx(request):
+    report_month, transactions, income, expenses = monthly_report_data(request)
+    return FileResponse(
+        monthly_workbook(
+            report_month, transactions.iterator(), income, expenses,
+            request.session.get("site_language", "en"),
+        ),
+        as_attachment=True,
+        filename=f"finance-report-{report_month:%Y-%m}.xlsx",
+    )
+
+
+@login_required
+def monthly_report_csv(request):
+    report_month, transactions, income, expenses = monthly_report_data(request)
     response = HttpResponse(content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = (
         f'attachment; filename="finance-report-{report_month:%Y-%m}.csv"'

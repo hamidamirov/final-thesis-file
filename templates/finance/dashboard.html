@@ -583,7 +583,7 @@
         </label>
         <button type="submit">{% tr "View report" %}</button>
       </form>
-      <p><a class="button-link" href="{% url 'monthly_report_csv' %}?month={{ report_month|date:'Y-m' }}">{% tr "Download CSV" %}</a></p>
+      <p><a class="button-link" href="{% url 'monthly_report_xlsx' %}?month={{ report_month|date:'Y-m' }}">{% tr "Download Excel" %}</a></p>
       <div class="report-summary">
         <div class="report-stat"><span>{% tr "Income" %}</span><strong class="income">{{ report_income|floatformat:2 }}</strong></div>
         <div class="report-stat"><span>{% tr "Expenses" %}</span><strong class="expense">{{ report_expenses|floatformat:2 }}</strong></div>
