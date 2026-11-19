@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.db import DatabaseError, connection, transaction
+from django.core.exceptions import PermissionDenied
 from django.forms import IntegerField, ValidationError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -64,6 +65,8 @@ def manage_admin_activity(request):
         return redirect("admin:index")
 
     if action in {"delete_entry", "delete_history"}:
+        if not request.user.has_perm("core.delete_admin_history"):
+            raise PermissionDenied
         selected = actions.filter(pk=entry_id) if entry_id else actions
         if request.POST.get("confirm") != "yes":
             return render(request, "admin/activity_delete_confirmation.html", {

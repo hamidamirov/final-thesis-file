@@ -12,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.core.date_fields import PastOrTodayDatesAdmin
+from apps.core.admin_permissions import SuperuserOnlyAdminMixin, mask_email
 from apps.core.ui_text import localize_admin_model, localize_ui, ui_lazy
 
 from .models import (
@@ -22,6 +23,7 @@ from .models import (
     SavingsGoal,
     StudentOffer,
     StudentProfile,
+    StudentVerificationRequest,
     Transaction,
     UserChallenge,
 )
@@ -47,7 +49,7 @@ class AccountDeletionRequestAdmin(admin.ModelAdmin):
             raise PermissionDenied
         extra_context = {
             **(extra_context or {}),
-            "can_review": request.user.has_perms(("finance.change_accountdeletionrequest", "auth.delete_user")),
+            "can_review": request.user.has_perms(("finance.change_accountdeletionrequest", "finance.review_account_deletion")),
         }
         return super().change_view(request, object_id, form_url, extra_context)
 
@@ -60,7 +62,7 @@ class AccountDeletionRequestAdmin(admin.ModelAdmin):
 
     @method_decorator(require_GET)
     def confirm_accept(self, request, pk):
-        if not request.user.has_perms(("finance.change_accountdeletionrequest", "auth.delete_user")):
+        if not request.user.has_perms(("finance.change_accountdeletionrequest", "finance.review_account_deletion")):
             raise PermissionDenied
         entry = get_object_or_404(AccountDeletionRequest.objects.select_related("user"), pk=pk)
         change_url = reverse("admin:finance_accountdeletionrequest_change", args=[pk])
@@ -81,7 +83,7 @@ class AccountDeletionRequestAdmin(admin.ModelAdmin):
     @transaction.atomic
     def review(self, request, pk):
         decision = request.POST.get("decision")
-        if not request.user.has_perms(("finance.change_accountdeletionrequest", "auth.delete_user")):
+        if not request.user.has_perms(("finance.change_accountdeletionrequest", "finance.review_account_deletion")):
             raise PermissionDenied
         if decision not in ("accept", "decline"):
             raise PermissionDenied
@@ -115,10 +117,19 @@ class StudentProfileInline(admin.StackedInline):
     can_delete = False
     extra = 1
     max_num = 1
-    fields = ("university", "profile_picture")
+    fields = ("university", "profile_picture", "account_type", "masked_university_email")
+    readonly_fields = ("account_type", "university_email", "masked_university_email")
+
+    @admin.display(description=ui_lazy("University email"))
+    def masked_university_email(self, obj):
+        return mask_email(obj.university_email)
 
 
 def permission_label(permission):
+    if permission.codename in {"view_full_email", "delete_admin_history", "review_account_deletion"}:
+        return localize_ui(permission.name)
+    if permission.codename == "review_student_status" and permission.content_type.app_label == "finance":
+        return localize_ui("Can review student status")
     content_type = permission.content_type
     model = content_type.model_class()
     action = permission.codename.removesuffix(f"_{content_type.model}")
@@ -144,7 +155,7 @@ class LocalizedPermissionsAdmin:
         return field
 
 
-class StudentGroupAdmin(LocalizedPermissionsAdmin, GroupAdmin):
+class StudentGroupAdmin(SuperuserOnlyAdminMixin, LocalizedPermissionsAdmin, GroupAdmin):
     pass
 
 
@@ -160,11 +171,73 @@ class StudentAdminPasswordChangeForm(AdminPasswordChangeForm):
 
 class StudentUserAdmin(PastOrTodayDatesAdmin, LocalizedPermissionsAdmin, DjangoUserAdmin):
     change_password_form = StudentAdminPasswordChangeForm
-    list_display = ("username", "email", "first_name", "last_name", "is_staff", "date_joined")
+    list_display = ("username", "masked_email", "account_type", "is_active", "date_joined")
     list_filter = ("is_staff", "is_active", "date_joined")
-    search_fields = ("username", "email", "first_name", "last_name")
+    search_fields = ("username", "first_name", "last_name")
     ordering = ("-date_joined",)
     inlines = (StudentProfileInline,)
+
+    def get_list_display(self, request):
+        if request.user.is_superuser:
+            return (*self.list_display, "is_staff", "is_superuser")
+        return self.list_display
+
+    def get_list_filter(self, request):
+        return self.list_filter if request.user.is_superuser else ("is_active", "date_joined")
+
+    @admin.display(description=ui_lazy("Email"))
+    def masked_email(self, obj):
+        return mask_email(obj.email)
+
+    @admin.display(description=ui_lazy("Account type"))
+    def account_type(self, obj):
+        profile = getattr(obj, "student_profile", None)
+        return profile.get_account_type_display() if profile else localize_ui("Other user")
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related("student_profile")
+        return queryset if request.user.is_superuser else queryset.filter(is_staff=False, is_superuser=False)
+
+    def lookup_allowed(self, lookup, value, request=None):
+        if "email" in lookup:
+            return False
+        return super().lookup_allowed(lookup, value, request)
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_superuser:
+            fieldsets = super().get_fieldsets(request, obj)
+            return tuple((title, {
+                **options, "fields": tuple("masked_email" if field == "email" else field for field in options["fields"]),
+            }) for title, options in fieldsets)
+        return (
+            (None, {"fields": ("username", "masked_email", "account_type", "is_active")}),
+            (ui_lazy("Important dates"), {"fields": ("last_login", "date_joined")}),
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            readonly = super().get_readonly_fields(request, obj)
+            return (*readonly, "email", "masked_email")
+        return ("username", "email", "masked_email", "account_type", "last_login", "date_joined")
+
+    def get_inline_instances(self, request, obj=None):
+        return super().get_inline_instances(request, obj) if request.user.is_superuser else []
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser and super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser and super().has_delete_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        if not request.user.is_superuser and obj and (obj.is_staff or obj.is_superuser):
+            return False
+        return super().has_change_permission(request, obj)
+
+    def user_change_password(self, request, id, form_url=""):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        return super().user_change_password(request, id, form_url)
 
 
 admin.site.unregister(User)
@@ -172,39 +245,83 @@ admin.site.register(User, StudentUserAdmin)
 admin.site.unregister(Group)
 admin.site.register(Group, StudentGroupAdmin)
 admin.site.site_header = ui_lazy("Student Finance Administration")
-admin.site.site_title = ui_lazy("Student Finance Admin")
+admin.site.site_title = ui_lazy("Student Finance Administration")
 admin.site.index_title = ui_lazy("Platform management")
 
-for model in (Budget, FinancialTip, SavingChallenge, SavingsGoal, StudentOffer, StudentProfile, Transaction, UserChallenge):
+for model in (
+    User, Group, AccountDeletionRequest, Budget, FinancialTip, SavingChallenge,
+    SavingsGoal, StudentOffer, StudentProfile, StudentVerificationRequest, Transaction, UserChallenge,
+):
     localize_admin_model(model)
 
 
-@admin.register(Budget)
-class BudgetAdmin(PastOrTodayDatesAdmin, admin.ModelAdmin):
-    list_display = ("month", "user", "category", "amount")
-    list_filter = ("month", "category")
-    search_fields = ("user__username", "category")
-    autocomplete_fields = ("user",)
-    date_hierarchy = "month"
+@admin.register(StudentVerificationRequest)
+class StudentVerificationRequestAdmin(admin.ModelAdmin):
+    list_display = ("user", "university", "masked_university_email", "status", "requested_at")
+    list_filter = ("status",)
+    search_fields = ("user__username", "university")
+    readonly_fields = (
+        "user", "university", "university_email", "email_verified_at",
+        "requested_at", "status", "reviewed_at", "reviewed_by", "review_note", "masked_university_email",
+    )
+    fields = tuple(field for field in readonly_fields if field != "university_email")
+    change_form_template = "admin/finance/studentverificationrequest/change_form.html"
 
+    @admin.display(description=ui_lazy("University email"))
+    def masked_university_email(self, obj):
+        return mask_email(obj.university_email)
 
-@admin.register(Transaction)
-class TransactionAdmin(PastOrTodayDatesAdmin, admin.ModelAdmin):
-    list_display = ("date", "user", "type", "category", "amount")
-    list_filter = ("type", "date", "category")
-    search_fields = ("user__username", "category", "note")
-    date_hierarchy = "date"
-    autocomplete_fields = ("user",)
-    list_per_page = 25
+    def lookup_allowed(self, lookup, value, request=None):
+        if "email" in lookup:
+            return False
+        return super().lookup_allowed(lookup, value, request)
 
+    def has_add_permission(self, request):
+        return False
 
-@admin.register(SavingsGoal)
-class SavingsGoalAdmin(admin.ModelAdmin):
-    list_display = ("name", "user", "saved_amount", "target_amount", "target_date")
-    search_fields = ("name", "user__username")
-    list_filter = ("target_date",)
-    autocomplete_fields = ("user",)
-    readonly_fields = ("created_at",)
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        if request.method == "POST":
+            raise PermissionDenied
+        extra_context = {
+            **(extra_context or {}),
+            "can_review": request.user.has_perms((
+                "finance.change_studentverificationrequest", "finance.review_student_status",
+            )),
+        }
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def get_urls(self):
+        return [
+            path("<int:pk>/review/", self.admin_site.admin_view(self.review), name="finance_studentverificationrequest_review"),
+            *super().get_urls(),
+        ]
+
+    @method_decorator(require_POST)
+    @transaction.atomic
+    def review(self, request, pk):
+        if not request.user.has_perms((
+            "finance.change_studentverificationrequest", "finance.review_student_status",
+        )):
+            raise PermissionDenied
+        decision = request.POST.get("decision")
+        if decision not in ("approved", "declined"):
+            raise PermissionDenied
+        entry = get_object_or_404(StudentVerificationRequest, pk=pk)
+        get_object_or_404(User.objects.select_for_update(), pk=entry.user_id)
+        entry = StudentVerificationRequest.objects.select_for_update().get(pk=pk)
+        if entry.status != StudentVerificationRequest.Status.PENDING:
+            self.message_user(request, localize_ui("This request has already been resolved."), messages.WARNING)
+        else:
+            entry.status = decision
+            entry.reviewed_at = timezone.now()
+            entry.reviewed_by = request.user
+            entry.review_note = request.POST.get("review_note", "").strip()[:500]
+            entry.save(update_fields=["status", "reviewed_at", "reviewed_by", "review_note"])
+            self.log_change(request, entry, entry.get_status_display())
+        return redirect(reverse("admin:finance_studentverificationrequest_change", args=[pk]))
 
 
 @admin.register(FinancialTip)
@@ -221,16 +338,8 @@ class SavingChallengeAdmin(admin.ModelAdmin):
     search_fields = ("title", "description")
 
 
-@admin.register(UserChallenge)
-class UserChallengeAdmin(PastOrTodayDatesAdmin, admin.ModelAdmin):
-    list_display = ("user", "challenge", "started_at", "completed_at")
-    list_filter = ("challenge", "completed_at")
-    search_fields = ("user__username", "challenge__title")
-    autocomplete_fields = ("user", "challenge")
-
-
 @admin.register(StudentOffer)
-class StudentOfferAdmin(PastOrTodayDatesAdmin, admin.ModelAdmin):
+class StudentOfferAdmin(admin.ModelAdmin):
     list_display = ("title", "provider", "category", "is_active", "valid_until")
     list_filter = ("is_active", "category")
     search_fields = ("title", "provider", "category", "description", "discount_code")

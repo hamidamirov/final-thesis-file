@@ -163,7 +163,7 @@ def _localize_admin_label(text):
         return translated
     capitalized = text[0].upper() + text[1:]
     translated = localize_ui(capitalized)
-    return translated[0].lower() + translated[1:] if translated != capitalized else text
+    return translated if translated != capitalized else text
 
 
 def localize_admin_model(model):

@@ -5,7 +5,7 @@
 {% block heading %}{% tr title %}{% endblock %}
 
 {% block content %}
-  <p>{% tr "Enter the six-digit code sent to your account email. The code expires in 2 minutes." %}</p>
+  <p>{% if verification_message %}{% tr verification_message %}{% else %}{% tr "Enter the six-digit code sent to your account email. The code expires in 2 minutes." %}{% endif %}</p>
   <form method="post">
     {% csrf_token %}
     {{ form.non_field_errors }}

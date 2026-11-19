@@ -31,7 +31,7 @@
     h1 { margin: 0; color: #173b67; font-size: 30px; letter-spacing: -.5px; }
     .form-intro { margin: 9px 0 22px; color: #667b93; line-height: 1.5; }
     .signup-form label { display: block; margin: 14px 0 6px; color: #233b56; font-size: 14px; font-weight: 700; }
-    .signup-form input { width: 100%; min-height: 45px; padding: 11px 13px; border: 1px solid #cbd9ea; border-radius: 9px; background: #fff; }
+    .signup-form input, .signup-form select { width: 100%; min-height: 45px; padding: 11px 13px; border: 1px solid #cbd9ea; border-radius: 9px; background: #fff; font: inherit; }
     .signup-form .password-field { position: relative; }
     .signup-form .password-field input { padding-right: 48px; }
     .password-toggle { position: absolute; top: 50%; right: 9px; display: grid; width: 34px; height: 34px; place-items: center; padding: 0; border: 0; border-radius: 7px; color: #607792; background: transparent; cursor: pointer; transform: translateY(-50%); }
@@ -88,7 +88,7 @@
     body[data-theme="dark"] .auth-register { color: #b9c9dc; }
     body[data-theme="dark"] .auth-register a { color: #8fc1ff; }
     body[data-theme="dark"] .signup-form label { color: #d8e5f4; }
-    body[data-theme="dark"] .signup-form input { border-color: #52647a; background: #1c2736; color: #e7edf5; }
+    body[data-theme="dark"] .signup-form input, body[data-theme="dark"] .signup-form select { border-color: #52647a; background: #1c2736; color: #e7edf5; }
     body[data-theme="dark"] .signup-form ul, body[data-theme="dark"] .signup-form .helptext { color: #b9c9dc; }
     body[data-theme="dark"] .password-toggle { color: #a9bacf; }
     body[data-theme="dark"] .password-toggle:hover { color: #8fc1ff; background: #253347; }
@@ -116,6 +116,7 @@
           <form method="post" class="signup-form" novalidate>{% csrf_token %}
             {{ form.non_field_errors }}
             {% for field in form %}
+              <div {% if field.name == "university" or field.name == "university_email" %}data-student-registration-field{% endif %}>
               <label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>
               {% if field.name == "password1" or field.name == "password2" %}
                 <div class="password-field field-row {% if field.errors %}has-errors{% endif %}">
@@ -129,6 +130,7 @@
               {% endif %}
               {{ field.errors }}
               {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+              </div>
             {% endfor %}
             <button class="signup-submit" type="submit">{% tr "Register" %}</button>
           </form>
@@ -180,5 +182,19 @@
     });
   </script>
   {% include "includes/auth_story_carousel_script.html" %}
+  <script>
+    (() => {
+      const type = document.getElementById("id_account_type");
+      const fields = document.querySelectorAll("[data-student-registration-field]");
+      const update = () => {
+        fields.forEach((field) => {
+          field.hidden = type.value !== "student";
+          field.querySelector("input").disabled = field.hidden;
+        });
+      };
+      type.addEventListener("change", update);
+      update();
+    })();
+  </script>
 </body>
 </html>

@@ -21,6 +21,7 @@ from apps.core.ui_text import localize_ui, translate_ui
 
 from .account_verification import issue_code
 from .account_views import latest_deletion_request
+from .date_ranges import DateRangeForm
 from .forms import (
     AccountDetailsForm,
     BudgetForm,
@@ -45,6 +46,7 @@ from .models import (
     first_day_of_current_month,
 )
 from .report_export import monthly_workbook
+from .student_verification import can_access_student_offers, latest_student_request
 
 
 REGISTRATION_CODE_LIFETIME = timedelta(minutes=2)
@@ -118,6 +120,9 @@ def signup(request):
                     "password_hash": user.password,
                     "code_hash": make_password(code),
                     "expires_at": now + REGISTRATION_CODE_LIFETIME,
+                    "account_type": form.cleaned_data["account_type"],
+                    "university": form.cleaned_data["university"],
+                    "university_email": form.cleaned_data["university_email"].lower(),
                 },
             )
         except IntegrityError:
@@ -190,6 +195,10 @@ def signup_verify(request):
                         email=pending.email,
                         password=pending.password_hash,
                     )
+                    StudentProfile.objects.create(
+                        user=user, account_type=pending.account_type,
+                        university=pending.university, university_email=pending.university_email,
+                    )
                     pending.delete()
         except IntegrityError:
             user = None
@@ -235,6 +244,8 @@ def past_or_current_month(value, current_month):
 def dashboard(request):
     language = request.session.get("site_language", "en")
     profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+    student_request = latest_student_request(request.user)
+    student_offers_allowed = can_access_student_offers(profile, student_request)
     profile_form = StudentProfileForm(instance=profile)
     account_details_form = AccountDetailsForm(instance=request.user)
     password_change_form = PasswordChangeForm(user=request.user)
@@ -367,7 +378,7 @@ def dashboard(request):
     transaction_list = user_transactions
     search_query = request.GET.get("q", "").strip()
     selected_type = request.GET.get("type", "")
-    selected_transaction_month = request.GET.get("transaction_month", "").strip()
+    transaction_range = DateRangeForm(request.GET, prefix="transaction", month_key="transaction_month")
     month_start = first_day_of_current_month()
     if search_query:
         matching_presets = {
@@ -383,14 +394,7 @@ def dashboard(request):
         )
     if selected_type in Transaction.Type.values:
         transaction_list = transaction_list.filter(type=selected_type)
-    transaction_month = past_or_current_month(selected_transaction_month, month_start)
-    if transaction_month:
-        transaction_list = transaction_list.filter(
-            date__year=transaction_month.year, date__month=transaction_month.month,
-        )
-        selected_transaction_month = transaction_month.isoformat()[:7]
-    else:
-        selected_transaction_month = ""
+    transaction_list = transaction_range.filter(transaction_list)
     totals = user_transactions.aggregate(
         income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
         expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
@@ -425,7 +429,7 @@ def dashboard(request):
     financial_tips = FinancialTip.objects.filter(is_active=True)
     available_offers = StudentOffer.objects.filter(is_active=True).filter(
         Q(valid_until__isnull=True) | Q(valid_until__gte=timezone.localdate())
-    )
+    ) if student_offers_allowed else StudentOffer.objects.none()
     offer_categories = list(
         available_offers.order_by("category")
         .values_list("category", flat=True)
@@ -446,18 +450,8 @@ def dashboard(request):
     for challenge in saving_challenges:
         challenge.user_entry = challenge_entries.get(challenge.pk)
 
-    # A month-specific report, scoped to the signed-in user's transactions.
-    report_month = past_or_current_month(request.GET.get("month", ""), month_start) or month_start
-
-    if report_month.month == 12:
-        next_month = date(report_month.year + 1, 1, 1)
-    else:
-        next_month = date(report_month.year, report_month.month + 1, 1)
-
-    report_transactions = user_transactions.filter(
-        date__gte=report_month,
-        date__lt=next_month,
-    )
+    report_range = DateRangeForm(request.GET, month_key="month", default_month=True)
+    report_transactions = report_range.filter(user_transactions)
     report_totals = report_transactions.aggregate(
         income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
         expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
@@ -494,7 +488,7 @@ def dashboard(request):
             "password_change_form": password_change_form,
             "search_query": search_query,
             "selected_type": selected_type,
-            "selected_transaction_month": selected_transaction_month,
+            "transaction_range": transaction_range,
             "transaction_types": Transaction.Type.choices,
             "income_total": income,
             "expense_total": expenses,
@@ -506,11 +500,13 @@ def dashboard(request):
             "savings_goals": savings_goals,
             "financial_tips": financial_tips,
             "student_offers": available_offers,
+            "student_offers_allowed": student_offers_allowed,
+            "student_request": student_request,
             "offer_categories": offer_categories,
             "selected_offer_category": selected_offer_category,
             "saving_challenges": saving_challenges,
             "current_month": month_start,
-            "report_month": report_month,
+            "report_range": report_range,
             "report_income": report_income,
             "report_expenses": report_expenses,
             "report_balance": report_income - report_expenses,
@@ -521,51 +517,49 @@ def dashboard(request):
 
 
 def monthly_report_data(request):
-    month_start = first_day_of_current_month()
-    report_month = past_or_current_month(request.GET.get("month", ""), month_start) or month_start
-
-    if report_month.month == 12:
-        next_month = date(report_month.year + 1, 1, 1)
-    else:
-        next_month = date(report_month.year, report_month.month + 1, 1)
-
-    transactions = Transaction.objects.filter(
-        user=request.user,
-        date__gte=report_month,
-        date__lt=next_month,
-    ).order_by("date", "created_at")
+    report_range = DateRangeForm(request.GET, month_key="month", default_month=True)
+    transactions = report_range.filter(Transaction.objects.filter(user=request.user)).order_by("date", "created_at")
     totals = transactions.aggregate(
         income=Sum("amount", filter=Q(type=Transaction.Type.INCOME)),
         expenses=Sum("amount", filter=Q(type=Transaction.Type.EXPENSE)),
     )
     income = totals["income"] or Decimal("0.00")
     expenses = totals["expenses"] or Decimal("0.00")
-    return report_month, transactions, income, expenses
+    return report_range, transactions, income, expenses
 
 
 @login_required
 def monthly_report_xlsx(request):
-    report_month, transactions, income, expenses = monthly_report_data(request)
+    report_range, transactions, income, expenses = monthly_report_data(request)
+    if not report_range.is_valid():
+        return HttpResponse(report_range.errors.as_text(), status=400, content_type="text/plain; charset=utf-8")
+    start, end = report_range.cleaned_data["start_date"], report_range.cleaned_data["end_date"]
+    period = f"{start:%Y-%m-%d}-to-{end:%Y-%m-%d}" if start else "all"
     return FileResponse(
         monthly_workbook(
-            report_month, transactions.iterator(), income, expenses,
+            start, transactions.iterator(), income, expenses,
             request.session.get("site_language", "en"),
+            end_date=end,
         ),
         as_attachment=True,
-        filename=f"finance-report-{report_month:%Y-%m}.xlsx",
+        filename=f"finance-report-{period}.xlsx",
     )
 
 
 @login_required
 def monthly_report_csv(request):
-    report_month, transactions, income, expenses = monthly_report_data(request)
+    report_range, transactions, income, expenses = monthly_report_data(request)
+    if not report_range.is_valid():
+        return HttpResponse(report_range.errors.as_text(), status=400, content_type="text/plain; charset=utf-8")
+    start, end = report_range.cleaned_data["start_date"], report_range.cleaned_data["end_date"]
+    period = f"{start:%Y-%m-%d}-to-{end:%Y-%m-%d}" if start else "all"
     response = HttpResponse(content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = (
-        f'attachment; filename="finance-report-{report_month:%Y-%m}.csv"'
+        f'attachment; filename="finance-report-{period}.csv"'
     )
     response.write("\ufeff")  # Excel recognizes UTF-8 correctly with this marker.
     writer = csv.writer(response)
-    writer.writerow(["Monthly Finance Report", report_month.strftime("%B %Y")])
+    writer.writerow(["Finance Report", start.isoformat() if start else "", end.isoformat() if end else ""])
     writer.writerow(["Total income", income])
     writer.writerow(["Total expenses", expenses])
     writer.writerow(["Monthly balance", income - expenses])

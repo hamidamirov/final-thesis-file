@@ -1,0 +1,23 @@
+{% extends "finance/transaction_action.html" %}
+{% load ui %}
+
+{% block page_title %}{% tr "Verify student status" %}{% endblock %}
+{% block heading %}{% tr "Verify student status" %}{% endblock %}
+{% block content %}
+  <p class="delete-description">{% tr "Verify your university email, then an administrator will review your student status." %}</p>
+  <form method="post" class="transaction-fields">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="transaction-actions">
+      <a class="transaction-button transaction-cancel" href="{% url 'dashboard' %}#my-profile">{% tr "Cancel" %}</a>
+      <button class="transaction-button transaction-save" type="submit" name="action" value="send">{% tr "Send verification code" %}</button>
+    </div>
+  </form>
+{% endblock %}

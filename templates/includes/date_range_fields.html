@@ -1,0 +1,23 @@
+{% load ui %}
+<div class="date-range-fields">
+  <div>
+    <label for="{{ range_form.start_date.id_for_label }}">{% tr "Start date" %}</label>
+    {{ range_form.start_date }}
+    {{ range_form.start_date.errors }}
+  </div>
+  <div>
+    <label for="{{ range_form.end_date.id_for_label }}">{% tr "End date" %}</label>
+    {{ range_form.end_date }}
+    {{ range_form.end_date.errors }}
+  </div>
+  <button type="submit">{% tr "Filter" %}</button>
+</div>
+<div class="date-presets" aria-label="{% tr 'Quick date ranges' %}">
+  {% for value, label in range_form.fields.period.choices %}
+    {% if value %}
+      <button class="button-link" type="submit" name="{{ range_form.period.html_name }}" value="{{ value }}" formnovalidate>{{ label|translate:site_language }}</button>
+    {% endif %}
+  {% endfor %}
+</div>
+{{ range_form.non_field_errors }}
+{{ range_form.period.errors }}

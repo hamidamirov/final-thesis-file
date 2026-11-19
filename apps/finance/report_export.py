@@ -7,10 +7,10 @@ from apps.core.ui_text import translate_ui
 from .models import Transaction
 
 
-def monthly_workbook(month, transactions, income, expenses, language):
+def monthly_workbook(month, transactions, income, expenses, language, *, end_date=None):
     output = BytesIO()
     with Workbook(output, {"in_memory": True}) as workbook:
-        sheet = workbook.add_worksheet(translate_ui("Monthly report", language))
+        sheet = workbook.add_worksheet(translate_ui("Finance report", language))
         sheet.hide_gridlines(2)
         for column, width in enumerate((16, 17, 30, 17, 62)):
             sheet.set_column(column, column, width)
@@ -24,13 +24,14 @@ def monthly_workbook(month, transactions, income, expenses, language):
             "text_wrap": True, "valign": "vcenter", "indent": 1,
         })
         money_format = "#,##0.00;[Red]-#,##0.00"
-        sheet.merge_range(0, 0, 0, 4, f'{translate_ui("Monthly report", language)}  ·  {month:%Y-%m}', title)
+        period = f"{month:%Y-%m-%d} – {end_date:%Y-%m-%d}" if month and end_date else translate_ui("All dates", language)
+        sheet.merge_range(0, 0, 0, 4, f'{translate_ui("Finance report", language)}  ·  {period}', title)
         sheet.set_row(0, 36)
 
         for row, (label, value, fill) in enumerate((
             ("Total income", income, "#F6F8FB"),
             ("Total expenses", expenses, "#F6F8FB"),
-            ("Monthly balance", income - expenses, "#E8F1FB"),
+            ("Balance", income - expenses, "#E8F1FB"),
         ), start=1):
             summary_style = {
                 "bg_color": fill, "font_color": "#173B67", "bold": row == 3,

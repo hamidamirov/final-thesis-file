@@ -21,6 +21,9 @@ class PendingRegistration(models.Model):
     attempts_left = models.PositiveSmallIntegerField(default=ATTEMPT_LIMIT)
     blocked_until = models.DateTimeField(null=True, blank=True)
     resend_count = models.PositiveSmallIntegerField(default=0)
+    account_type = models.CharField(max_length=7, default="other")
+    university = models.CharField(max_length=180, blank=True)
+    university_email = models.EmailField(blank=True)
 
 
 class AccountVerification(models.Model):
@@ -28,6 +31,7 @@ class AccountVerification(models.Model):
         LOGIN = "login", "Login"
         DELETION = "deletion", "Account deletion"
         EMAIL = "email", "Email change"
+        STUDENT = "student", "Student verification"
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     purpose = models.CharField(max_length=8, choices=Purpose.choices)
@@ -37,6 +41,7 @@ class AccountVerification(models.Model):
     expires_at = models.DateTimeField()
     attempts_left = models.PositiveSmallIntegerField(default=5)
     blocked_until = models.DateTimeField(null=True, blank=True)
+    recipient_email = models.EmailField(blank=True)
 
     class Meta:
         constraints = [
@@ -67,6 +72,7 @@ class AccountDeletionRequest(models.Model):
         ordering = ["-requested_at", "-pk"]
         verbose_name = ui_lazy("Account deletion request")
         verbose_name_plural = ui_lazy("Account deletion requests")
+        permissions = [("review_account_deletion", "Can review account deletion requests")]
 
     def __str__(self):
         return self.username
@@ -241,6 +247,10 @@ class Transaction(models.Model):
 
 
 class StudentProfile(models.Model):
+    class AccountType(models.TextChoices):
+        STUDENT = "student", ui_lazy("Student")
+        OTHER = "other", ui_lazy("Other user")
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -248,6 +258,40 @@ class StudentProfile(models.Model):
     )
     university = models.CharField(max_length=180, blank=True)
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True)
+    account_type = models.CharField(
+        max_length=7, choices=AccountType.choices, default=AccountType.OTHER,
+        verbose_name=ui_lazy("Account type"),
+    )
+    university_email = models.EmailField(blank=True, verbose_name=ui_lazy("University email"))
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+
+
+class StudentVerificationRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", ui_lazy("Pending")
+        APPROVED = "approved", ui_lazy("Approved")
+        DECLINED = "declined", ui_lazy("Declined")
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    university = models.CharField(max_length=180, verbose_name=ui_lazy("University"))
+    university_email = models.EmailField(verbose_name=ui_lazy("University email"))
+    email_verified_at = models.DateTimeField(verbose_name=ui_lazy("Email verified at"))
+    requested_at = models.DateTimeField(auto_now_add=True, verbose_name=ui_lazy("Requested at"))
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.PENDING, verbose_name=ui_lazy("Status"))
+    review_note = models.CharField(max_length=500, blank=True, verbose_name=ui_lazy("Review note"))
+    reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name=ui_lazy("Reviewed at"))
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="reviewed_student_requests", verbose_name=ui_lazy("Reviewed by"),
+    )
+
+    class Meta:
+        ordering = ["-requested_at", "-pk"]
+        verbose_name = ui_lazy("Student verification request")
+        verbose_name_plural = ui_lazy("Student verification requests")
+        permissions = [("review_student_status", "Can review student status")]
+
+    def __str__(self):
+        return self.user.get_username()

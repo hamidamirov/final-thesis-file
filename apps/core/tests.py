@@ -6,15 +6,36 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import Client, TestCase
+from django.db.models.query import QuerySet
 from django.urls import reverse
 from django.utils import timezone
 
-from axes.models import AccessFailureLog, AccessLog
+from axes.models import AccessAttempt, AccessFailureLog, AccessLog
 
 from apps.finance.models import AccountDeletionRequest, PendingRegistration, Transaction
 
 
 class LoginSecurityTests(TestCase):
+    def test_security_admin_pages_work_without_database_timezone_conversion(self):
+        admin = get_user_model().objects.create_superuser(
+            username="security-page-admin", email="admin@example.test",
+            password="Secure-admin-pass-42!",
+        )
+        self.client.force_login(admin)
+        AccessAttempt.objects.create(
+            username="failed-user", ip_address="127.0.0.1",
+            user_agent="test", attempt_time=timezone.now(), failures_since_start=1,
+        )
+        with patch.object(QuerySet, "datetimes", side_effect=ValueError("Missing database time zone definitions")):
+            for model in (AccessAttempt, AccessFailureLog, AccessLog):
+                with self.subTest(model=model._meta.model_name):
+                    url = reverse(f"admin:axes_{model._meta.model_name}_changelist")
+                    self.assertEqual(self.client.get(url).status_code, 200)
+            response = self.client.get(reverse("admin:axes_accessattempt_changelist"), {
+                "attempt_time__gte": timezone.now().replace(hour=0, minute=0, second=0, microsecond=0).isoformat(),
+            })
+            self.assertContains(response, "failed-user")
+
     def test_failed_logins_are_logged_and_locked_after_limit(self):
         username = "security-check-user"
         get_user_model().objects.create_user(

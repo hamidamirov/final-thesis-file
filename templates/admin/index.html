@@ -36,17 +36,12 @@
     .admin-overview { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 330px); gap: 24px; align-items: start; }
     .overview-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; }
     .overview-card { min-width: 0; border: 1px solid var(--admin-line); border-radius: 16px; background: var(--overview-surface); box-shadow: 0 4px 16px #152c4810; }
-    .overview-card--finance { grid-column: 1 / -1; }
     .overview-card > h2 { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--admin-line); border-radius: 15px 15px 0 0; color: var(--admin-ink); background: var(--overview-heading); font-size: 15px; font-weight: 700; line-height: 1.4; }
     .overview-card ul { margin: 0; padding: 0; list-style: none; }
     .overview-card li { margin: 0; list-style: none; }
     .overview-models { display: grid; grid-template-columns: minmax(0, 1fr); }
-    .overview-card--finance .overview-models { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .overview-model { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-width: 0; padding: 11px 16px; }
     .overview-model:nth-child(n+2), .overview-activity li + li { border-top: 1px solid var(--admin-line); }
-    .overview-card--finance .overview-model:nth-child(2) { border-top: 0; }
-    .overview-card--finance .overview-model:nth-child(even) { border-inline-start: 1px solid var(--admin-line); }
-    .overview-card--finance .overview-model:last-child:nth-child(odd) { grid-column: 1 / -1; }
     .overview-model-name { flex: 1 1 120px; min-width: 0; color: var(--admin-ink); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
     .overview-model-name a { color: inherit; }
     .overview-model-name a:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -68,15 +63,11 @@
     .overview-activity .overview-delete:hover { background: var(--overview-control); }
     .overview-activity-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--admin-line); }
     .overview-card > p { margin: 0; padding: 14px 16px; }
-    @media (min-width: 851px) and (max-width: 1120px) { .overview-sections, .overview-card--finance .overview-models { grid-template-columns: minmax(0, 1fr); } }
+    @media (min-width: 851px) and (max-width: 1120px) { .overview-sections { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 850px) { .admin-overview { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 600px) {
       body.dashboard #content { width: calc(100% - 28px); padding: 22px 0; }
-      .overview-sections, .overview-card--finance .overview-models { grid-template-columns: minmax(0, 1fr); }
-    }
-    @media (min-width: 851px) and (max-width: 1120px), (max-width: 600px) {
-      .overview-card--finance .overview-model:nth-child(2) { border-top: 1px solid var(--admin-line); }
-      .overview-card--finance .overview-model:nth-child(even) { border-inline-start: 0; }
+      .overview-sections { grid-template-columns: minmax(0, 1fr); }
     }
   </style>
 {% endblock %}
@@ -84,17 +75,14 @@
 {% block content %}
   <div class="admin-overview">
     <div class="overview-sections">
-      {% for app in app_list|admin_overview_order %}
-        <section class="overview-card overview-card--{{ app.app_label }}" aria-labelledby="overview-{{ app.app_label }}">
-          <h2 id="overview-{{ app.app_label }}">
-            {% if app.app_label == "auth" %}{% tr "Users and groups" %}
-            {% elif app.app_label == "axes" %}{% tr "Security" %}
-            {% else %}{{ app.name }}{% endif %}
-          </h2>
+      {% for section in app_list|admin_sections %}
+        <section class="overview-card overview-card--{{ section.key }}" aria-labelledby="overview-{{ section.key }}">
+          <h2 id="overview-{{ section.key }}">{{ section.name }}</h2>
+          {% if section.description %}<p>{{ section.description }}</p>{% endif %}
           <ul class="overview-models">
-            {% for model in app.models %}
+            {% for model in section.models %}
               <li class="overview-model">
-                {% with name_id=app.app_label|add:"-"|add:model.object_name %}
+                {% with name_id=model.key %}
                   <span class="overview-model-name" id="{{ name_id }}">
                     {% if model.admin_url %}<a href="{{ model.admin_url }}">{{ model.name }}</a>
                     {% else %}{{ model.name }}{% endif %}
@@ -123,7 +111,7 @@
           {% csrf_token %}
           {% if activity.entries %}<button type="submit" name="action" value="clear">{% tr "Clear list" %}</button>{% endif %}
           {% if activity.can_restore %}<button type="submit" name="action" value="restore">{% tr "Restore hidden actions" %}</button>{% endif %}
-          <button type="submit" name="action" value="delete_history">{% tr "Delete my history" %}</button>
+          {% if perms.core.delete_admin_history %}<button type="submit" name="action" value="delete_history">{% tr "Delete my history" %}</button>{% endif %}
         </form>
       {% endif %}
       {% if activity.entries %}
@@ -150,7 +138,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="entry_id" value="{{ entry.pk|slugify }}">
                 <button type="submit" name="action" value="hide">{% tr "Hide" %}</button>
-                <button class="overview-delete" type="submit" name="action" value="delete_entry">{% tr "Delete" %}</button>
+                {% if perms.core.delete_admin_history %}<button class="overview-delete" type="submit" name="action" value="delete_entry">{% tr "Delete" %}</button>{% endif %}
               </form>
             </li>
           {% endfor %}

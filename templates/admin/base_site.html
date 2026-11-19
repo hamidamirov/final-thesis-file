@@ -1,6 +1,8 @@
 {% extends "admin/base.html" %}
 {% load ui static %}
 
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
 {% block header %}
   <div class="admin-header-area" data-theme="{{ site_theme }}">
     {{ block.super }}
@@ -10,7 +12,7 @@
 {% block branding %}
   <a class="admin-brand" href="{% url 'admin:index' %}">
     <span class="admin-brand-mark"><img src="{% static 'core/student-finance-logo.jpg' %}" alt=""></span>
-    <span>{% tr "Student Finance" %}</span>
+    <span>{% tr "Student Finance Administration" %}</span>
   </a>
 {% endblock %}
 

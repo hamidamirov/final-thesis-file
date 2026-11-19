@@ -4,7 +4,7 @@ from django.db.models import Q
 
 from apps.core.models import AdminActivityPreferences
 
-from apps.core.ui_text import localize_ui, translate_ui
+from apps.core.ui_text import localize_ui, translate_ui, ui_lazy
 
 register = template.Library()
 
@@ -23,7 +23,10 @@ def tr(context, value, **values):
 @register.simple_tag
 def recent_admin_activity(user):
     preferences = AdminActivityPreferences.objects.filter(user=user).first()
-    actions = LogEntry.objects.filter(user=user).select_related("content_type")
+    actions = LogEntry.objects.filter(user=user).exclude(
+        content_type__app_label="finance",
+        content_type__model__in=("transaction", "budget", "savingsgoal", "userchallenge"),
+    ).select_related("content_type")
     can_restore = False
     if preferences:
         hidden = Q(pk__lte=preferences.cleared_through_id) | Q(
@@ -38,13 +41,36 @@ def recent_admin_activity(user):
 
 
 @register.filter
-def admin_overview_order(app_list):
-    priorities = {"auth": 0, "axes": 1, "finance": 2}
-    apps = sorted(
-        app_list or (),
-        key=lambda app: (priorities.get(app["app_label"], len(priorities)), app["app_label"]),
+def admin_sections(app_list):
+    definitions = (
+        ("accounts", "Users and permissions", "Manage user accounts and administrator permissions.",
+         ("auth.User", "auth.Group")),
+        ("requests", "Requests", "Review student verification and account deletion requests.",
+         ("finance.StudentVerificationRequest", "finance.AccountDeletionRequest")),
+        ("content", "Student content", "Manage student offers, financial tips, and saving challenges.",
+         ("finance.StudentOffer", "finance.FinancialTip", "finance.SavingChallenge")),
+        ("security", "Security", "Review sign-in attempts and security records.",
+         ("axes.AccessAttempt", "axes.AccessFailureLog", "axes.AccessLog")),
     )
-    return [
-        {**app, "models": sorted(app["models"], key=lambda model: model["object_name"].casefold())}
-        for app in apps
-    ]
+    available = {
+        f'{app["app_label"]}.{model["object_name"]}': {
+            **model, "key": f'{app["app_label"]}-{model["object_name"].lower()}',
+        }
+        for app in app_list or () for model in app["models"]
+    }
+    sections = []
+    for key, name, description, labels in definitions:
+        models = [available.pop(label) for label in labels if label in available]
+        if models:
+            sections.append({
+                "key": key, "name": ui_lazy(name), "description": ui_lazy(description), "models": models,
+            })
+    for app in app_list or ():
+        models = []
+        for model in app["models"]:
+            label = f'{app["app_label"]}.{model["object_name"]}'
+            if label in available:
+                models.append(available[label])
+        if models:
+            sections.append({"key": app["app_label"], "name": app["name"], "models": models})
+    return sections

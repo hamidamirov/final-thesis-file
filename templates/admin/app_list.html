@@ -1,0 +1,37 @@
+{% load i18n ui %}
+
+{% for section in app_list|admin_sections %}
+  <div class="module admin-section-{{ section.key }}">
+    <table>
+      <caption>{{ section.name }}</caption>
+      <thead class="visually-hidden">
+        <tr>
+          <th scope="col">{% translate "Model name" %}</th>
+          <th scope="col">{% translate "Add link" %}</th>
+          <th scope="col">{% translate "Change or view list link" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for model in section.models %}
+          <tr class="model-{{ model.object_name|lower }}{% if model.admin_url and model.admin_url in request.path %} current-model{% endif %}">
+            <th scope="row" id="{{ model.key }}">
+              {% if model.admin_url %}
+                <a href="{{ model.admin_url }}"{% if model.admin_url in request.path %} aria-current="page"{% endif %}>{{ model.name }}</a>
+              {% else %}{{ model.name }}{% endif %}
+            </th>
+            <td>{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink" aria-describedby="{{ model.key }}">{% translate "Add" %}</a>{% endif %}</td>
+            {% if show_changelinks %}
+              <td>
+                {% if model.admin_url %}
+                  <a href="{{ model.admin_url }}" class="{% if model.view_only %}viewlink{% else %}changelink{% endif %}" aria-describedby="{{ model.key }}">{% if model.view_only %}{% translate "View" %}{% else %}{% translate "Change" %}{% endif %}</a>
+                {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% empty %}
+  <p>{% translate "You don’t have permission to view or edit anything." %}</p>
+{% endfor %}

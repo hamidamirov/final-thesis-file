@@ -8,6 +8,7 @@ from apps.core.views import database_health, home, manage_admin_activity, save_p
 from apps.finance.account_views import (
     EmailVerificationLoginView, account_deletion_status, login_verify, request_account_deletion, verify_email_change,
 )
+from apps.finance.student_verification import request_student_verification
 from apps.finance.views import (
     budget_delete,
     dashboard,
@@ -29,6 +30,7 @@ urlpatterns = [
     path("accounts/email/verify/", verify_email_change, name="verify_email_change"),
     path("accounts/delete-request/", request_account_deletion, name="request_account_deletion"),
     path("accounts/delete-request/status/", account_deletion_status, name="account_deletion_status"),
+    path("accounts/student-verification/", request_student_verification, name="request_student_verification"),
     path(
         "accounts/password-reset/",
         auth_views.PasswordResetView.as_view(
