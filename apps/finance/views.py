@@ -120,9 +120,6 @@ def signup(request):
                     "password_hash": user.password,
                     "code_hash": make_password(code),
                     "expires_at": now + REGISTRATION_CODE_LIFETIME,
-                    "account_type": form.cleaned_data["account_type"],
-                    "university": form.cleaned_data["university"],
-                    "university_email": form.cleaned_data["university_email"].lower(),
                 },
             )
         except IntegrityError:
@@ -195,10 +192,7 @@ def signup_verify(request):
                         email=pending.email,
                         password=pending.password_hash,
                     )
-                    StudentProfile.objects.create(
-                        user=user, account_type=pending.account_type,
-                        university=pending.university, university_email=pending.university_email,
-                    )
+                    StudentProfile.objects.create(user=user)
                     pending.delete()
         except IntegrityError:
             user = None

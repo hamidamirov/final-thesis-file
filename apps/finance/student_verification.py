@@ -74,7 +74,7 @@ def request_student_verification(request):
                         user=user, university=draft["university"],
                         university_email=draft["university_email"], email_verified_at=timezone.now(),
                     )
-                    profile.account_type = StudentProfile.AccountType.STUDENT
+                    profile.account_type = StudentProfile.AccountType.OTHER
                     profile.university_email = draft["university_email"]
                     profile.save(update_fields=["account_type", "university_email"])
                     request.session.pop(draft_key, None)

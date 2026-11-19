@@ -170,6 +170,8 @@ class StudentStatusTests(TestCase):
         self.assertNotContains(self.client.get(dashboard), 'data-view="student-offers"')
         request = self.submit_request()
         self.assertEqual(request.status, "pending")
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.account_type, StudentProfile.AccountType.OTHER)
         self.assertIsNotNone(request.email_verified_at)
         self.assertNotContains(self.client.get(dashboard), "PRIVATE-STUDENT-CODE")
         url = reverse("admin:finance_studentverificationrequest_review", args=[request.pk])
@@ -181,6 +183,8 @@ class StudentStatusTests(TestCase):
         request.refresh_from_db()
         self.assertEqual(request.reviewed_by, self.admin)
         self.assertEqual(request.status, "approved")
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.account_type, StudentProfile.AccountType.STUDENT)
         self.client.force_login(self.user)
         self.assertContains(self.client.get(dashboard), "PRIVATE-STUDENT-CODE")
         self.assertContains(self.client.get(dashboard), "University domain checked.")
@@ -214,8 +218,11 @@ class StudentStatusTests(TestCase):
         self.assertEqual(self.profile.account_type, "other")
         self.assertNotContains(self.client.get(reverse("dashboard")), "PRIVATE-STUDENT-CODE")
 
-    def test_registration_keeps_student_details_through_email_verification(self):
+    def test_registration_creates_a_regular_account_and_ignores_student_fields(self):
         self.client.logout()
+        page = self.client.get(reverse("signup"))
+        for name in ("account_type", "university", "university_email"):
+            self.assertNotContains(page, f'name="{name}"')
         response = self.client.post(reverse("signup"), {
             "username": "new-university-student", "email": "new@example.test",
             "password1": "A-safe-signup-pass-42!", "password2": "A-safe-signup-pass-42!",
@@ -226,8 +233,9 @@ class StudentStatusTests(TestCase):
         code = re.search(r"verification code is ([0-9]{6})\.", mail.outbox[-1].body)[1]
         self.client.post(reverse("signup_verify"), {"code": code})
         profile = StudentProfile.objects.get(user__username="new-university-student")
-        self.assertEqual(profile.account_type, "student")
-        self.assertEqual(profile.university_email, "new@university.example")
+        self.assertEqual(profile.account_type, "other")
+        self.assertEqual(profile.university_email, "")
+        self.assertEqual(profile.university, "")
         self.assertFalse(StudentVerificationRequest.objects.filter(user=profile.user).exists())
         self.assertNotContains(self.client.get(reverse("dashboard")), "PRIVATE-STUDENT-CODE")
 

@@ -166,28 +166,6 @@ class TransactionForm(PastOrTodayDatesMixin, forms.ModelForm):
 
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    account_type = forms.ChoiceField(
-        choices=StudentProfile.AccountType.choices, required=False,
-        initial=StudentProfile.AccountType.OTHER, label=ui_lazy("Account type"),
-    )
-    university = forms.CharField(max_length=180, required=False, label=ui_lazy("University"))
-    university_email = forms.EmailField(
-        required=False, label=ui_lazy("University email"),
-        help_text=ui_lazy("Verify your university email, then an administrator will review your student status."),
-    )
-    field_order = ["username", "email", "account_type", "university", "university_email", "password1", "password2"]
-
-    def clean(self):
-        cleaned = super().clean()
-        cleaned["account_type"] = cleaned.get("account_type") or StudentProfile.AccountType.OTHER
-        if cleaned["account_type"] == StudentProfile.AccountType.STUDENT:
-            for field in ("university", "university_email"):
-                if not cleaned.get(field) and field not in self.errors:
-                    self.add_error(field, ui_lazy("This field is required."))
-        else:
-            cleaned["university"] = ""
-            cleaned["university_email"] = ""
-        return cleaned
 
     class Meta:
         model = get_user_model()

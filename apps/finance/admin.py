@@ -320,6 +320,12 @@ class StudentVerificationRequestAdmin(admin.ModelAdmin):
             entry.reviewed_by = request.user
             entry.review_note = request.POST.get("review_note", "").strip()[:500]
             entry.save(update_fields=["status", "reviewed_at", "reviewed_by", "review_note"])
+            profile, _ = StudentProfile.objects.get_or_create(user=entry.user)
+            profile.account_type = (
+                StudentProfile.AccountType.STUDENT if decision == "approved"
+                else StudentProfile.AccountType.OTHER
+            )
+            profile.save(update_fields=["account_type"])
             self.log_change(request, entry, entry.get_status_display())
         return redirect(reverse("admin:finance_studentverificationrequest_change", args=[pk]))
 

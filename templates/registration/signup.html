@@ -116,7 +116,7 @@
           <form method="post" class="signup-form" novalidate>{% csrf_token %}
             {{ form.non_field_errors }}
             {% for field in form %}
-              <div {% if field.name == "university" or field.name == "university_email" %}data-student-registration-field{% endif %}>
+              <div>
               <label for="{{ field.id_for_label }}">{{ field.label|translate:site_language }}</label>
               {% if field.name == "password1" or field.name == "password2" %}
                 <div class="password-field field-row {% if field.errors %}has-errors{% endif %}">
@@ -182,19 +182,5 @@
     });
   </script>
   {% include "includes/auth_story_carousel_script.html" %}
-  <script>
-    (() => {
-      const type = document.getElementById("id_account_type");
-      const fields = document.querySelectorAll("[data-student-registration-field]");
-      const update = () => {
-        fields.forEach((field) => {
-          field.hidden = type.value !== "student";
-          field.querySelector("input").disabled = field.hidden;
-        });
-      };
-      type.addEventListener("change", update);
-      update();
-    })();
-  </script>
 </body>
 </html>
